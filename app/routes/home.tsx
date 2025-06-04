@@ -4,6 +4,7 @@ import "../app.css";
 import React, { useEffect, useRef } from "react";
 import * as THREE from 'three';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Chart from 'chart.js/auto';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { Link } from 'react-router';
@@ -272,7 +273,7 @@ function Home() {
           through coding, music, or solving challenges—always seeking to learn,
           grow, and explore the extraordinary.
         </p>
-        <div className="absolute bottom-55 opacity-70 animate-bounce">
+        <div className="absolute bottom-53 opacity-70 animate-bounce">
           <i className="fas fa-chevron-down text-teal-300 text-3xl "></i>
         </div>
         <Link to="/projects" className="absolute bottom-35 bg-gradient-to-r from-purple-300 to-indigo-400 hover:from-indigo-400 hover:to-teal-300 px-8 py-4 rounded-full text-lg font-semibold text-gray-900 shadow-lg transition transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300">View My Projects</Link>
