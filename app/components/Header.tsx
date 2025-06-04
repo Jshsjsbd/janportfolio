@@ -22,7 +22,7 @@ function Header(props: HeaderParams) {
     if (props.type === 'home') {
         return(
             <div className="flex justify-center items-center">
-                <div className="absolute top-2 shadow-xl/15 rounded-full backdrop-blur-3xl flex justify-between items-center h-20 w-6/9 items-center z-1000">
+                <div className="absolute top-2 shadow-xl/15 rounded-full backdrop-blur-3xl flex justify-between items-center h-20 w-8/9 items-center z-1000">
                     <div className="flex items-center text-gray-100">
                         <div className="flex items-center h-10 mr-2 absolute left-8 text-center text-xl font-bold">
                             <Link to='/'>Jan Peter</Link>
@@ -62,7 +62,7 @@ function Header(props: HeaderParams) {
     } else if (props.type === 'about') {
         return (
             <div className="flex justify-center items-center">
-                <div className="absolute top-2 shadow-xl/15 rounded-full backdrop-blur-3xl flex justify-between items-center h-20 w-6/9 z-1000">
+                <div className="absolute top-2 shadow-xl/15 rounded-full backdrop-blur-3xl flex justify-between items-center h-20 w-8/9 z-1000">
                     <div className="flex items-center text-gray-100">
                         <div className="flex items-center h-10 mr-2 absolute left-8 text-center text-xl font-bold">
                             <Link to='/'>Jan Peter</Link>
@@ -102,7 +102,7 @@ function Header(props: HeaderParams) {
     } else if (props.type === 'projects') {
         return (
             <div className="flex justify-center items-center">
-                <div className="absolute top-2 shadow-xl/15 rounded-full backdrop-blur-3xl flex justify-between items-center h-20 w-6/9 z-1000">
+                <div className="absolute top-2 shadow-xl/15 rounded-full backdrop-blur-3xl flex justify-between items-center h-20 w-8/9 z-1000">
                     <div className="flex items-center text-gray-100">
                         <div className="flex items-center h-10 mr-2 absolute left-8 text-center text-xl font-bold">
                             <Link to='/'>Jan Peter</Link>
@@ -142,7 +142,7 @@ function Header(props: HeaderParams) {
     } else if (props.type === 'contact') {
         return (
             <div className="flex justify-center items-center">
-                <div className="absolute top-2 shadow-xl/15 rounded-full backdrop-blur-3xl flex justify-between items-center h-20 w-6/9 z-1000">
+                <div className="absolute top-2 shadow-xl/15 rounded-full backdrop-blur-3xl flex justify-between items-center h-20 w-8/9 z-1000">
                     <div className="flex items-center text-gray-100">
                         <div className="flex items-center h-10 mr-2 absolute left-8 text-center text-xl font-bold">
                             <Link to='/'>Jan Peter</Link>

@@ -276,18 +276,18 @@ function Home() {
       ></canvas>
       <Header type='home' />
       <section className="relative pt-32 pb-44 flex flex-col items-center justify-center min-h-screen text-center z-10">
-        <h2 className="text-2xl md:text-3xl font-medium text-teal-200 mb-7">Musician & Swimmer & Front-End Developer</h2>
-        <p className="text-lg md:text-xl max-w-xl mx-auto opacity-90 mb-10">
+        <h2 className="mt-10 text-2xl md:text-3xl font-medium text-teal-200 mb-7">Musician & Swimmer & Front-End Developer</h2>
+        <p className="relative text-lg md:text-xl max-w-xl mx-auto opacity-90 mb-10">
           I’m a curious soul who loves blending creativity and logic, whether it’s
           through coding, music, or solving challenges—always seeking to learn,
           grow, and explore the extraordinary.
         </p>
-        <div className="absolute bottom-53 opacity-70 animate-bounce">
+        <div className="mt-3 opacity-70 animate-bounce">
           <i className="fas fa-chevron-down text-teal-300 text-3xl"></i>
         </div>
         <Link
           to="/projects"
-          className="absolute bottom-35 bg-gradient-to-r from-purple-300 to-indigo-400 hover:from-indigo-400 hover:to-teal-300 px-8 py-4 rounded-full text-lg font-semibold text-gray-900 shadow-lg transition transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300"
+          className="mt-3 bg-gradient-to-r from-purple-300 to-indigo-400 hover:from-indigo-400 hover:to-teal-300 px-8 py-4 rounded-full text-lg font-semibold text-gray-900 shadow-lg transition transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300"
         >
           View My Projects
         </Link>
