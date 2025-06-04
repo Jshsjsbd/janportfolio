@@ -3,23 +3,19 @@ import Footer from "../components/Footer";
 import "../app.css";
 import React, { useEffect, useRef } from "react";
 import * as THREE from 'three';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Chart from 'chart.js/auto';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { Link } from 'react-router';
-
-
-gsap.registerPlugin(ScrollTrigger);
 
 function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<HTMLCanvasElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
+  // ---- Three.js 3D Background Initialization ----
   useEffect(() => {
-    // ---- Three.js 3D Background Initialization ----
     if (!canvasRef.current) return;
+
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
       alpha: true,
@@ -110,74 +106,86 @@ function Home() {
     };
   }, []);
 
+  // ---- GSAP Animations with dynamic import ----
   useEffect(() => {
-    // ---- GSAP Animations ----
-    gsap.from(".section-title", {
-      scrollTrigger: {
-        trigger: ".section-title",
-        start: "top 90%",
-        toggleActions: "play none none reverse",
-      },
-      opacity: 0,
-      y: 40,
-      duration: 0.8,
-      ease: "power2.out",
-      stagger: 0.2,
-    });
+    let scrollTriggerInstance: any;
 
-    gsap.utils.toArray("section").forEach((sec, idx) => {
-    const element = sec as HTMLElement;
-    gsap.from(element.querySelector(".glass"), {
-      scrollTrigger: {
-        trigger: element,
-        start: "top 70%",
-        toggleActions: "play none none reverse",
-      },
-      opacity: 0,
-      y: 80,
-      duration: 1,
-      delay: 0.01 * idx,
-      ease: "power2.out",
-    });
-  });
+    const loadGSAPPlugins = async () => {
+      const { gsap } = await import("gsap");
+      const ScrollTrigger = await import("gsap/ScrollTrigger");
 
+      gsap.registerPlugin(ScrollTrigger.default || ScrollTrigger); // fallback للتوافق
+      scrollTriggerInstance = ScrollTrigger;
 
-    gsap.from(".nav-shadow", {
-      y: -50,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power2.out",
-    });
-    gsap.from(".fa-chevron-down", {
-      y: -22,
-      repeat: -1,
-      yoyo: true,
-      duration: 1.3,
-      ease: "sine.inOut",
-    });
+      gsap.from(".section-title", {
+        scrollTrigger: {
+          trigger: ".section-title",
+          start: "top 90%",
+          toggleActions: "play none none reverse",
+        },
+        opacity: 0,
+        y: 40,
+        duration: 0.8,
+        ease: "power2.out",
+        stagger: 0.2,
+      });
 
-    gsap.to("#three-bg", {
-      scrollTrigger: {
-        trigger: "#about",
-        start: "top 50%",
-        end: "bottom top",
-        scrub: true,
-      },
-      filter: "blur(8px)",
-      opacity: 0.17,
-      scale: 0.985,
-      ease: "sine.inOut",
-    });
+      gsap.utils.toArray("section").forEach((sec, idx) => {
+        const element = sec as HTMLElement;
+        gsap.from(element.querySelector(".glass"), {
+          scrollTrigger: {
+            trigger: element,
+            start: "top 70%",
+            toggleActions: "play none none reverse",
+          },
+          opacity: 0,
+          y: 80,
+          duration: 1,
+          delay: 0.01 * idx,
+          ease: "power2.out",
+        });
+      });
 
-    // Cleanup on unmount (kill all ScrollTriggers)
+      gsap.from(".nav-shadow", {
+        y: -50,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out",
+      });
+
+      gsap.from(".fa-chevron-down", {
+        y: -22,
+        repeat: -1,
+        yoyo: true,
+        duration: 1.3,
+        ease: "sine.inOut",
+      });
+
+      gsap.to("#three-bg", {
+        scrollTrigger: {
+          trigger: "#about",
+          start: "top 50%",
+          end: "bottom top",
+          scrub: true,
+        },
+        filter: "blur(8px)",
+        opacity: 0.17,
+        scale: 0.985,
+        ease: "sine.inOut",
+      });
+    };
+
+    loadGSAPPlugins();
+
     return () => {
-      ScrollTrigger.getAll().forEach((st) => st.kill());
+      if (scrollTriggerInstance && scrollTriggerInstance.getAll) {
+        scrollTriggerInstance.getAll().forEach((st: { kill: () => void }) => st.kill());
+      }
     };
   }, []);
 
-
+  // ---- Chart.js ----
   useEffect(() => {
-    // ---- Chart.js ----
     if (!chartRef.current) return;
 
     const ctx = chartRef.current.getContext("2d");
@@ -216,7 +224,7 @@ function Home() {
               color: "#bebec6",
               font: { size: 16, weight: "bold" },
             },
-            ticks: { display: false},
+            ticks: { display: false },
             min: 0,
             max: 10,
           },
@@ -231,8 +239,8 @@ function Home() {
     };
   }, []);
 
+  // ---- Fake form submission ----
   useEffect(() => {
-    // ---- Fake form submission ----
     if (!formRef.current) return;
 
     const form = formRef.current;
@@ -258,14 +266,15 @@ function Home() {
       form.removeEventListener("submit", onSubmit);
     };
   }, []);
-  return(
+
+  return (
     <>
       <canvas
-          ref={canvasRef}
-          id="three-bg"
-          style={{ position: "fixed", inset: 0, zIndex: 1}}
+        ref={canvasRef}
+        id="three-bg"
+        style={{ position: "fixed", inset: 0, zIndex: 1 }}
       ></canvas>
-      <Header type='home'/>
+      <Header type='home' />
       <section className="relative pt-32 pb-44 flex flex-col items-center justify-center min-h-screen text-center z-10">
         <h2 className="text-2xl md:text-3xl font-medium text-teal-200 mb-7">Musician & Swimmer & Front-End Developer</h2>
         <p className="text-lg md:text-xl max-w-xl mx-auto opacity-90 mb-10">
@@ -274,13 +283,18 @@ function Home() {
           grow, and explore the extraordinary.
         </p>
         <div className="absolute bottom-53 opacity-70 animate-bounce">
-          <i className="fas fa-chevron-down text-teal-300 text-3xl "></i>
+          <i className="fas fa-chevron-down text-teal-300 text-3xl"></i>
         </div>
-        <Link to="/projects" className="absolute bottom-35 bg-gradient-to-r from-purple-300 to-indigo-400 hover:from-indigo-400 hover:to-teal-300 px-8 py-4 rounded-full text-lg font-semibold text-gray-900 shadow-lg transition transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300">View My Projects</Link>
+        <Link
+          to="/projects"
+          className="absolute bottom-35 bg-gradient-to-r from-purple-300 to-indigo-400 hover:from-indigo-400 hover:to-teal-300 px-8 py-4 rounded-full text-lg font-semibold text-gray-900 shadow-lg transition transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-300"
+        >
+          View My Projects
+        </Link>
       </section>
       <Footer />
     </>
-  )
+  );
 }
 
 export default Home;
