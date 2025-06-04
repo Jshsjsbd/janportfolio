@@ -4,7 +4,6 @@ import "../app.css";
 import React, { useEffect, useRef } from "react";
 import * as THREE from 'three';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Chart from 'chart.js/auto';
 
 
