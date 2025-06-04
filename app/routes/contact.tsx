@@ -3,8 +3,6 @@ import Footer from "../components/Footer";
 import "../app.css";
 import React, { useEffect, useRef } from "react";
 import * as THREE from 'three';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Chart from 'chart.js/auto';
 
 function Contact() {
@@ -311,7 +309,7 @@ function Contact() {
             <div className="flex flex-col justify-center items-center">
               <button
                 type="submit"
-                className="cursor-pointer w-6/9 px-6 py-3 bg-gradient-to-r from-teal-400 to-indigo-500 text-lg font-bold text-gray-900 rounded-md hover:from-indigo-500 hover:to-teal-400 transition duration-300"
+                className="w-6/9 px-6 py-3 bg-gradient-to-r from-teal-400 to-indigo-500 text-lg font-bold text-gray-900 rounded-md hover:from-indigo-500 hover:to-teal-400 transition duration-300"
               >
                 Send Message
               </button>
