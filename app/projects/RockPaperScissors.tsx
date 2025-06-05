@@ -68,10 +68,8 @@ function RockPaperScissors() {
             playerChoice: choice,
             computerChoice: null,
             result: ''
-        }));
-
-        // Animate computer thinking
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        }));        // Animate computer thinking
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Show computer's choice and calculate result
         const computerChoice = choices[Math.floor(Math.random() * choices.length)];
