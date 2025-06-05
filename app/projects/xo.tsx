@@ -104,10 +104,8 @@ function TicTacToe() {
             duration: 0.3,
             ease: "back.out(1.7)"
         });
-    };
-
-    useEffect(() => {
-        if (!isXNext && !winInfo.winner) {
+    };    useEffect(() => {
+        if (!isXNext && !winInfo.winner && !board.every(cell => cell !== null)) {
             // AI's turn
             setTimeout(() => {
                 const bestMove = findBestMove([...board]);
