@@ -277,7 +277,7 @@ function Projects() {
       ></canvas>
       <Header type='projects' />
       <section id="projects" className="relative top-20 z-10 py-24 md:py-36">
-        <div className="custom-styles shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] max-w-7xl mx-auto px-6 py-14 w-8/9">
+        <div className="custom-styles shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] max-w-7xl mx-auto px-6 py-14 w-full">
           <h2 className="text-3xl md:text-4xl font-bold font-sans tracking-wider text-[#11ffd6] text-center mb-8">Projects</h2>
           <div className="grid gap-8 md:grid-cols-2">
             <div className="group bg-[rgba(34, 40, 49, 0.6)] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] p-6 rounded-lg flex flex-col hover:scale-105 hover:shadow-2xl transition">
