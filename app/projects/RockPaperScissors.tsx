@@ -16,6 +16,25 @@ type GameState = {
     history: Array<{ player: Choice; computer: Choice; result: string }>;
 };
 
+// Loading animation component
+const LoadingEmoji: React.FC = () => {
+    const [frame, setFrame] = useState<number>(0);
+    const frames = ['✊', '✋', '✌️'];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setFrame((prev) => (prev + 1) % frames.length);
+        }, 200);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <span className="animate-bounce">
+            {frames[frame]}
+        </span>
+    );
+};
+
 function RockPaperScissors() {
     const [gameState, setGameState] = useState<GameState>({
         playerChoice: null,
@@ -44,18 +63,18 @@ function RockPaperScissors() {
         setIsAnimating(true);
 
         // Reset previous choices
-        setGameState(prev => ({ ...prev, playerChoice: null, computerChoice: null, result: '' }));
-
-        // Animate choice selection
-        const computerChoice = choices[Math.floor(Math.random() * choices.length)];
-        
-        // Show player's choice immediately
-        setGameState(prev => ({ ...prev, playerChoice: choice }));
+        setGameState(prev => ({
+            ...prev,
+            playerChoice: choice,
+            computerChoice: null,
+            result: ''
+        }));
 
         // Animate computer thinking
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Show computer's choice and calculate result
+        const computerChoice = choices[Math.floor(Math.random() * choices.length)];
         const result = getWinner(choice, computerChoice);
         
         setGameState(prev => ({
@@ -103,16 +122,20 @@ function RockPaperScissors() {
                         </div>
                         <div className="text-4xl font-bold text-purple-400">VS</div>
                         <div className="text-6xl min-w-[80px] text-center">
-                            {getChoiceEmoji(gameState.computerChoice)}
+                            {isAnimating ? (
+                                <LoadingEmoji />
+                            ) : getChoiceEmoji(gameState.computerChoice)}
                         </div>
                     </div>
 
                     {/* Result Display */}
                     <div className="text-center mb-8">
-                        <p className="text-2xl font-bold text-teal-400">{gameState.result}</p>
+                        <p className="text-2xl font-bold text-teal-300">
+                            {isAnimating ? 'Thinking...' : gameState.result}
+                        </p>
                     </div>
 
-                    {/* Controls */}
+                    {/* Choice Buttons */}
                     <div className="flex justify-center gap-4">
                         {choices.map((choice) => (
                             <button
@@ -125,20 +148,6 @@ function RockPaperScissors() {
                             </button>
                         ))}
                     </div>
-
-                        {/* Game History */}
-                    <div className="mt-8">
-                        <h3 className="text-xl font-semibold text-teal-200 mb-4">Game History</h3>
-                        <div className="max-h-40 overflow-y-auto custom-styles1 rounded-lg p-4">
-                            {gameState.history.slice().reverse().map((game, index) => (
-                                <div key={index} className="flex justify-between items-center mb-2 text-sm">
-                                    <span>{getChoiceEmoji(game.player)}</span>
-                                    <span className="text-xs">{game.result}</span>
-                                    <span>{getChoiceEmoji(game.computer)}</span>
-                                </div>
-                            ))}
-                            </div>
-                        </div>
                     </div>
                 </div>
             <Footer />
