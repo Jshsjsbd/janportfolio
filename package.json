@@ -12,6 +12,7 @@
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@react-router/node": "^7.5.3",
     "@react-router/serve": "^7.5.3",
+    "@types/react-router-dom": "^5.3.3",
     "@types/three": "^0.177.0",
     "chart.js": "^4.4.9",
     "gsap": "^3.13.0",
@@ -21,6 +22,7 @@
     "react-dom": "^19.1.0",
     "react-qrcode-logo": "^3.0.0",
     "react-router": "^7.5.3",
+    "react-router-dom": "^7.6.2",
     "three": "^0.177.0"
   },
   "devDependencies": {

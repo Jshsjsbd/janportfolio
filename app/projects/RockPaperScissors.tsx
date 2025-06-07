@@ -95,9 +95,9 @@ function RockPaperScissors() {
     };
 
     return (
-        <div className="min-h-screen mt-5">
+        <div className="min-h-screen">
             <Header type='projects' />
-            <div className="relative z-10 pt-32 pb-20">
+            <div className="relative z-10 pt-32 pb-20 mt-5">
                 <div className="custom-styles max-w-4xl mx-auto p-8 rounded-2xl">
                     <h1 className="text-4xl font-bold text-center text-teal-300 mb-8">Rock Paper Scissors</h1>
                     
