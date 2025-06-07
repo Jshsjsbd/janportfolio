@@ -4,6 +4,7 @@ import "../app.css";
 import React, { useEffect, useRef } from "react";
 import * as THREE from 'three';
 import Chart from 'chart.js/auto';
+
 import rps from "../assets/rps.png";
 import xo from "../assets/xo.png";
 import { Link } from 'react-router';
@@ -279,7 +280,7 @@ function Projects() {
       <section id="projects" className="relative top-20 z-10 py-24 md:py-36">
         <div className="custom-styles shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] max-w-7xl mx-auto px-6 py-14 w-full">
           <h2 className="text-3xl md:text-4xl font-bold font-sans tracking-wider text-[#11ffd6] text-center mb-8">Projects</h2>
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <div className="group bg-[rgba(34, 40, 49, 0.6)] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] p-6 rounded-lg flex flex-col hover:scale-105 hover:shadow-2xl transition">
               <div className="relative aspect-w-16 aspect-h-10 mb-5 rounded-lg overflow-hidden bg-gray-900">
                 <img src={rps} alt="Rock Paper Scissors" className="w-full h-36 object-cover bg-black opacity-85 group-hover:opacity-100 transition duration-300"/>
@@ -288,6 +289,7 @@ function Projects() {
               <p className="text-gray-300 mb-2 text-sm">A fully interactive rock paper scissors game with ai</p>
               <Link to="/projects/rps" className="text-teal-300 mt-auto hover:underline">View Live &rarr;</Link>
             </div>
+
             <div className="group bg-[rgba(34, 40, 49, 0.6)] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] p-6 rounded-lg flex flex-col hover:scale-105 hover:shadow-2xl transition">
               <div className="relative aspect-w-16 aspect-h-10 mb-5 rounded-lg overflow-hidden bg-gray-900">
                 <img src={xo} alt="Xo Game" className="w-full h-36 object-cover bg-black opacity-85 group-hover:opacity-100 transition duration-300"/>
@@ -295,6 +297,15 @@ function Projects() {
               <h3 className="font-bold text-xl text-teal-200 mb-2">Xo Game</h3>
               <p className="text-gray-300 mb-2 text-sm">A fully interactive xo game with ai </p>
               <Link to="/projects/xo" className="text-teal-300 mt-auto hover:underline">View Live &rarr;</Link>
+            </div>
+
+            <div className="group bg-[rgba(34, 40, 49, 0.6)] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] p-6 rounded-lg flex flex-col hover:scale-105 hover:shadow-2xl transition">
+              <div className="relative aspect-w-16 aspect-h-10 mb-5 rounded-lg overflow-hidden bg-gray-900">
+                <img alt="Qr Generator" className="w-full h-36 object-cover bg-black opacity-85 group-hover:opacity-100 transition duration-300"/>
+              </div>
+              <h3 className="font-bold text-xl text-teal-200 mb-2">Qr Code Generator</h3>
+              <p className="text-gray-300 mb-2 text-sm">Generate QR codes for easy sharing</p>
+              <Link to="/projects/wifi-qr" className="text-teal-300 mt-auto hover:underline">View Live &rarr;</Link>
             </div>
           </div>
         </div>

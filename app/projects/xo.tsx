@@ -136,7 +136,7 @@ function TicTacToe() {
     return (
         <>
             <Header type='projects' />
-            <div className="min-h-screen pt-24 pb-12 px-4">
+            <div className="min-h-screen pt-24 pb-12 px-4 mt-5">
                 <div className="custom-styles max-w-4xl mx-auto p-8 rounded-2xl backdrop-blur-md">
                     <h1 className="text-4xl font-bold text-center text-teal-300 mb-8">Tic Tac Toe</h1>
                     
