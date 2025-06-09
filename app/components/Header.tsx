@@ -1,6 +1,6 @@
 import { Link } from "react-router";
-import { useState } from "react";
-import MobileNav from "./MobileNav"
+import React, { useEffect, useRef, useState } from "react";
+import HamburgerBtn from "./MobileNav"
 
 
 type HeaderParams = {
@@ -9,15 +9,24 @@ type HeaderParams = {
 
 function Header(props: HeaderParams) {
     const [hidden, setHidden] = useState(true);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const handleClick = () => {
-        if (hidden) {
-            setHidden(false);
-        } else{
-            setHidden(true);
-        }
-        console.log(hidden);
+        setHidden(!hidden)
     }
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setHidden(true);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     if (props.type === 'home') {
         return(
@@ -47,13 +56,8 @@ function Header(props: HeaderParams) {
                                 </li>
                             </ul>
                         </div>
-                        <div className="absolute top-8 right-7 flex flex-col font-bold block md:hidden">
-                            <div className="flex flex-col gap-1 mb-10 absolute right-5 rounded-full" onClick={handleClick}>
-                                <div className="border w-7 h-1 bg-white"></div>
-                                <div className="border w-7 h-1 bg-white"></div>
-                                <div className="border w-7 h-1 bg-white"></div>
-                            </div>
-                            {!hidden && <MobileNav navType="home" />}
+                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden" ref={menuRef}>
+                            <HamburgerBtn navType="home" />
                         </div>
                     </div>
                 </div>
@@ -87,13 +91,8 @@ function Header(props: HeaderParams) {
                                 </li>
                             </ul>
                         </div>
-                        <div className="absolute top-8 right-7 flex flex-col font-bold block md:hidden">
-                            <div className="flex flex-col gap-1 mb-10 absolute right-5 rounded-full" onClick={handleClick}>
-                                <div className="border w-7 h-1 bg-white"></div>
-                                <div className="border w-7 h-1 bg-white"></div>
-                                <div className="border w-7 h-1 bg-white"></div>
-                            </div>
-                            {!hidden && <MobileNav navType="about" />}
+                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden" ref={menuRef}>
+                            <HamburgerBtn navType="about" />
                         </div>
                     </div>
                 </div>
@@ -127,13 +126,8 @@ function Header(props: HeaderParams) {
                                 </li>
                             </ul>
                         </div>
-                        <div className="absolute top-8 right-7 flex flex-col font-bold block md:hidden">
-                            <div className="flex flex-col gap-1 mb-10 absolute right-5 rounded-full" onClick={handleClick}>
-                                <div className="border w-7 h-1 bg-white"></div>
-                                <div className="border w-7 h-1 bg-white"></div>
-                                <div className="border w-7 h-1 bg-white"></div>
-                            </div>
-                            {!hidden && <MobileNav navType="projects" />}
+                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden" ref={menuRef}>
+                            <HamburgerBtn navType="projects" />
                         </div>
                     </div>
                 </div>
@@ -167,13 +161,8 @@ function Header(props: HeaderParams) {
                                 </li>
                             </ul>
                         </div>
-                        <div className="absolute top-8 right-7 flex flex-col font-bold block md:hidden">
-                            <div className="flex flex-col gap-1 mb-10 absolute right-5 rounded-full" onClick={handleClick}>
-                                <div className="border w-7 h-1 bg-white"></div>
-                                <div className="border w-7 h-1 bg-white"></div>
-                                <div className="border w-7 h-1 bg-white"></div>
-                            </div>
-                            {!hidden && <MobileNav navType="contact" />}
+                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden" ref={menuRef}>
+                            <HamburgerBtn navType="contact" />
                         </div>
                     </div>
                 </div>

@@ -7,9 +7,12 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
 import type { Route } from "./+types/root";
 import "./app.css";
+import Loader from "./components/loader";
+import React from "react";
+import { useLocation } from "react-router";
+import { NavigationProvider } from "./components/MobileNav";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -43,7 +46,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const location = useLocation();
+  const [showLoader, setShowLoader] = React.useState(true);
+
+  // إظهار loader عند كل تغيير في المسار (location.pathname)
+  React.useEffect(() => {
+    setShowLoader(true);
+
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 2000); // ⏱️ يمكنك تعديل المدة هنا حسب الحاجة
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]); // 👈 هذا هو السر
+
+  return (
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <NavigationProvider>
+          {showLoader && <Loader />}
+          {!showLoader && <Outlet />}
+          <ScrollRestoration />
+          <Scripts />
+        </NavigationProvider>
+      </body>
+    </html>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
