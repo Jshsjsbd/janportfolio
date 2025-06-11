@@ -1,5 +1,10 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/about", "destination": "/" },
+    { "source": "/projects", "destination": "/" },
+    { "source": "/contact", "destination": "/" },
+    { "source": "/projects/rps", "destination": "/" },
+    { "source": "/projects/rps", "destination": "/" },
+    { "source": "/projects/wifi-qr", "destination": "/" }
   ]
 }
