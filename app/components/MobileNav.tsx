@@ -194,7 +194,7 @@ function NavigationWrapper({ children }: { children: React.ReactNode }) {
 }
 
 function HamburgerBtn(props: navParams) {
-    const { toggleVisibility } = useNavigation();
+    const { toggleVisibility, isVisible } = useNavigation();
 
     return(
         <NavigationWrapper>
@@ -202,9 +202,21 @@ function HamburgerBtn(props: navParams) {
                 className="flex flex-col gap-1 absolute right-5 rounded-full z-1000" 
                 onClick={toggleVisibility}
             >
-                <div className="border w-7 h-1 bg-white"></div>
-                <div className="border w-7 h-1 bg-white"></div>
-                <div className="border w-7 h-1 bg-white"></div>
+                <div className={`border w-7 h-1 bg-white transition-all duration-300 ${
+                    isVisible
+                    ? 'rotate-45 translate-y-2'
+                    : ''
+                }`}></div>
+                <div className={`border w-7 h-1 bg-white transition-all duration-300 ${
+                    isVisible 
+                    ? 'opacity-0'
+                    : 'opacity-100'
+                }`}></div>
+                <div className={`border w-7 h-1 bg-white transition-all duration-300 ${
+                    isVisible 
+                    ? '-rotate-45 -translate-y-2'
+                    : ''
+                }`}></div>
             </button>
             <MobileNav navType={props.navType} />
         </NavigationWrapper>
