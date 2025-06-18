@@ -274,6 +274,11 @@ function Home() {
         id="three-bg"
         style={{ position: "fixed", inset: 0, zIndex: 1 }}
       ></canvas>
+      <img
+        src="/api/beacon?source=home"
+        alt=""
+        style={{ display: "none" }}
+      />
       <Header type='home' />
       <section className="relative pt-32 pb-44 flex flex-col items-center justify-center min-h-screen text-center z-10">
         <h2 className="mt-10 text-2xl md:text-3xl font-medium text-teal-200 mb-7">Musician & Swimmer & Front-End Developer</h2>
