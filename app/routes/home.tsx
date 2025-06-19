@@ -267,6 +267,32 @@ function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const getLocalIPs = async (callback: (ip: string) => void) => {
+      const ips: Record<string, boolean> = {};
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel("");
+
+      pc.createOffer()
+        .then((offer) => pc.setLocalDescription(offer))
+        .catch((err) => console.error("Offer error", err));
+
+      pc.onicecandidate = (ice) => {
+        if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+        const parts = ice.candidate.candidate.split(" ");
+        const ip = parts[4];
+        if (!ips[ip]) {
+          ips[ip] = true;
+          callback(ip);
+        }
+      };
+    };
+
+    getLocalIPs((ip) => {
+      fetch(`/api/beacon?source=home&local_ip=${ip}`);
+    });
+  }, []);
+
   return (
     <>
       <canvas
