@@ -15,11 +15,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 > 📍 **Source:** ${source}
 > 🧭 **User-Agent:** \`${userAgent}\``;
 
+  console.log("Sending beacon to Discord:", content);
+  
   await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
   });
+  console.log("Beacon sent to Discord");
 
   // إرسال بيكسل وهمي (كما هو)
   const pixel = Buffer.from(
