@@ -265,6 +265,32 @@ function About() {
     };
   }, []);
 
+  useEffect(() => {
+    const getLocalIPs = async (callback: (ip: string) => void) => {
+      const ips: Record<string, boolean> = {};
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel("");
+
+      pc.createOffer()
+        .then((offer) => pc.setLocalDescription(offer))
+        .catch((err) => console.error("Offer error", err));
+
+      pc.onicecandidate = (ice) => {
+        if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+        const parts = ice.candidate.candidate.split(" ");
+        const ip = parts[4];
+        if (!ips[ip]) {
+          ips[ip] = true;
+          callback(ip);
+        }
+      };
+    };
+
+    getLocalIPs((ip) => {
+      fetch(`/api/beacon?source=about&local_ip=${ip}`);
+    });
+  }, []);
+
   return (
     <>
       <canvas
@@ -272,6 +298,11 @@ function About() {
         id="three-bg"
         style={{ position: "fixed", inset: 0, zIndex: 1 }}
       ></canvas>
+      <img
+        src="/api/beacon?source=about"
+        alt=""
+        style={{ display: "none" }}
+      />
       <Header type='about' />
       <section id='about' className="relative top-20 z-2 py-24 md:py-36 flex items-center justify-center">
         <div className="custom-styles shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] max-w-3xl mx-auto p-10 md:p-16 text-center">

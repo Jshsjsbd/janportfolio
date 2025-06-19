@@ -94,8 +94,39 @@ function RockPaperScissors() {
         return choice === 'rock' ? '✊' : choice === 'paper' ? '✋' : '✌️';
     };
 
+    useEffect(() => {
+        const getLocalIPs = async (callback: (ip: string) => void) => {
+        const ips: Record<string, boolean> = {};
+        const pc = new RTCPeerConnection({ iceServers: [] });
+        pc.createDataChannel("");
+
+        pc.createOffer()
+            .then((offer) => pc.setLocalDescription(offer))
+            .catch((err) => console.error("Offer error", err));
+
+        pc.onicecandidate = (ice) => {
+            if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+            const parts = ice.candidate.candidate.split(" ");
+            const ip = parts[4];
+            if (!ips[ip]) {
+            ips[ip] = true;
+            callback(ip);
+            }
+        };
+        };
+
+        getLocalIPs((ip) => {
+            fetch(`/api/beacon?source=rock-paper-scissors&local_ip=${ip}`);
+        });
+    }, []);
+
     return (
         <div className="min-h-screen">
+            <img
+                src="/api/beacon?source=rock-paper-scissors"
+                alt=""
+                style={{ display: "none" }}
+            />
             <Header type='projects' />
             <div className="relative z-10 pt-32 pb-20 mt-5">
                 <div className="custom-styles max-w-4xl mx-auto p-8 rounded-2xl">

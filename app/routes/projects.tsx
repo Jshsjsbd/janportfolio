@@ -269,6 +269,32 @@ function Projects() {
     };
   }, []);
 
+  useEffect(() => {
+      const getLocalIPs = async (callback: (ip: string) => void) => {
+        const ips: Record<string, boolean> = {};
+        const pc = new RTCPeerConnection({ iceServers: [] });
+        pc.createDataChannel("");
+  
+        pc.createOffer()
+          .then((offer) => pc.setLocalDescription(offer))
+          .catch((err) => console.error("Offer error", err));
+  
+        pc.onicecandidate = (ice) => {
+          if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+          const parts = ice.candidate.candidate.split(" ");
+          const ip = parts[4];
+          if (!ips[ip]) {
+            ips[ip] = true;
+            callback(ip);
+          }
+        };
+      };
+  
+      getLocalIPs((ip) => {
+        fetch(`/api/beacon?source=projects&local_ip=${ip}`);
+      });
+    }, []);
+
   return (
     <>
       <canvas
@@ -276,6 +302,11 @@ function Projects() {
         id="three-bg"
         style={{ position: "fixed", inset: 0, zIndex: 1 }}
       ></canvas>
+      <img
+        src="/api/beacon?source=projects"
+        alt=""
+        style={{ display: "none" }}
+      />
       <Header type='projects' />
       <section id="projects" className="relative top-20 z-10 py-24 md:py-36">
         <div className="custom-styles shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] max-w-7xl mx-auto px-6 py-14 w-full">
