@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const localIP = req.query.local_ip || "N/A";
 
   // ✅ إرسال إشعار إلى Discord Webhook
-  const webhookUrl = "https://discord.com/api/webhooks/1385313073564225576/lwmGqBlY6YyilEQvxo7fcgguhQ6xYLDtLTUupDV2FJjSoIPPlqdDXgcxQocek2ZElUK1"; // ← حط رابطك هنا
+  const webhookUrl = "https://discord.com/api/webhooks/1385380725498445994/jMdTjU24DjFOP1y6s7Eqpj3XBb090jeag-YlY8rqNJzynBJb4jcmwspI5bUa5X_AtuAI"; // ← حط رابطك هنا
 
   const content = `📡 **Beacon Detected**
 > 🌐 **Public IP:** ${publicIP}
@@ -15,8 +15,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 > 📍 **Source:** ${source}
 > 🧭 **User-Agent:** \`${userAgent}\``;
 
-  console.log("Sending beacon to Discord:", content);
-  
   await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
