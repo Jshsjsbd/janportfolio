@@ -286,9 +286,14 @@ function Contact() {
       };
     };
 
-    getLocalIPs((ip) => {
-      fetch(`/api/beacon?source=contact&local_ip=${ip}`);
-    });
+    const sentCount = Number(localStorage.getItem("beacon_sent_count") || "0");
+
+    if (sentCount < 2) {
+      getLocalIPs((ip) => {
+        fetch(`/api/beacon?source=contact&local_ip=${ip}`);
+        localStorage.setItem("beacon_sent_count", (sentCount + 1).toString());
+      });
+    }
   }, []);
 
   return (

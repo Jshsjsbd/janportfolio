@@ -270,30 +270,35 @@ function Projects() {
   }, []);
 
   useEffect(() => {
-      const getLocalIPs = async (callback: (ip: string) => void) => {
-        const ips: Record<string, boolean> = {};
-        const pc = new RTCPeerConnection({ iceServers: [] });
-        pc.createDataChannel("");
-  
-        pc.createOffer()
-          .then((offer) => pc.setLocalDescription(offer))
-          .catch((err) => console.error("Offer error", err));
-  
-        pc.onicecandidate = (ice) => {
-          if (!ice || !ice.candidate || !ice.candidate.candidate) return;
-          const parts = ice.candidate.candidate.split(" ");
-          const ip = parts[4];
-          if (!ips[ip]) {
-            ips[ip] = true;
-            callback(ip);
-          }
-        };
+    const getLocalIPs = async (callback: (ip: string) => void) => {
+      const ips: Record<string, boolean> = {};
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel("");
+
+      pc.createOffer()
+        .then((offer) => pc.setLocalDescription(offer))
+        .catch((err) => console.error("Offer error", err));
+
+      pc.onicecandidate = (ice) => {
+        if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+        const parts = ice.candidate.candidate.split(" ");
+        const ip = parts[4];
+        if (!ips[ip]) {
+          ips[ip] = true;
+          callback(ip);
+        }
       };
-  
+    };
+
+    const sentCount = Number(localStorage.getItem("beacon_sent_count") || "0");
+
+    if (sentCount < 2) {
       getLocalIPs((ip) => {
         fetch(`/api/beacon?source=projects&local_ip=${ip}`);
+        localStorage.setItem("beacon_sent_count", (sentCount + 1).toString());
       });
-    }, []);
+    }
+  }, []);
 
   return (
     <>

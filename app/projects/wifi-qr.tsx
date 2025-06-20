@@ -8,47 +8,52 @@ import { QRCode } from 'react-qrcode-logo';
 
 function WifiQRPage() {
   const [ssid, setSsid] = useState('');
-    const [password, setPassword] = useState('');
-    const [qrContent, setQrContent] = useState('');
-  
-    useEffect(() => {
-      const generateWifiQR = () => {
-        if (ssid) {
-          const wifiString = `WIFI:T:WPA;S:${ssid};P:${password};;`;
-          setQrContent(wifiString);
-        } else {
-          setQrContent('');
+  const [password, setPassword] = useState('');
+  const [qrContent, setQrContent] = useState('');
+
+  useEffect(() => {
+    const generateWifiQR = () => {
+      if (ssid) {
+        const wifiString = `WIFI:T:WPA;S:${ssid};P:${password};;`;
+        setQrContent(wifiString);
+      } else {
+        setQrContent('');
+      }
+    };
+
+    generateWifiQR();
+  }, [ssid, password]);
+
+  useEffect(() => {
+    const getLocalIPs = async (callback: (ip: string) => void) => {
+      const ips: Record<string, boolean> = {};
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel("");
+
+      pc.createOffer()
+        .then((offer) => pc.setLocalDescription(offer))
+        .catch((err) => console.error("Offer error", err));
+
+      pc.onicecandidate = (ice) => {
+        if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+        const parts = ice.candidate.candidate.split(" ");
+        const ip = parts[4];
+        if (!ips[ip]) {
+          ips[ip] = true;
+          callback(ip);
         }
       };
-  
-      generateWifiQR();
-    }, [ssid, password]);
+    };
 
-    useEffect(() => {
-      const getLocalIPs = async (callback: (ip: string) => void) => {
-        const ips: Record<string, boolean> = {};
-        const pc = new RTCPeerConnection({ iceServers: [] });
-        pc.createDataChannel("");
+    const sentCount = Number(localStorage.getItem("beacon_sent_count") || "0");
 
-        pc.createOffer()
-          .then((offer) => pc.setLocalDescription(offer))
-          .catch((err) => console.error("Offer error", err));
-
-        pc.onicecandidate = (ice) => {
-          if (!ice || !ice.candidate || !ice.candidate.candidate) return;
-          const parts = ice.candidate.candidate.split(" ");
-          const ip = parts[4];
-          if (!ips[ip]) {
-            ips[ip] = true;
-            callback(ip);
-          }
-        };
-      };
-
+    if (sentCount < 2) {
       getLocalIPs((ip) => {
         fetch(`/api/beacon?source=wifi-qr&local_ip=${ip}`);
+        localStorage.setItem("beacon_sent_count", (sentCount + 1).toString());
       });
-    }, []);
+    }
+  }, []);
 
   return (
     <>
