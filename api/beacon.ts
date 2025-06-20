@@ -1,7 +1,7 @@
 // ملف beacon.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const webhookUrl = "https://discord.com/api/webhooks/....";
+const webhookUrl = "https://discord.com/api/webhooks/1385723017614721035/-cmB1QMyN6qJI_V4dcwWh3F9YdpV6K3ug-ocze8uGPmcFFxCdsaof0cm6JJfP34lhfUD";
 
 let queue: string[] = [];
 
