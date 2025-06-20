@@ -15,6 +15,7 @@ function TicTacToe() {
     const [isXNext, setIsXNext] = useState(true);
     const [winInfo, setWinInfo] = useState<WinInfo>({ winner: null, line: null });
     const [score, setScore] = useState({ player: 0, ai: 0 });
+    const [isAIThinking, setIsAIThinking] = useState(false);
 
     const calculateWinner = (squares: Board): WinInfo => {
         const lines = [
@@ -79,15 +80,14 @@ function TicTacToe() {
         }
 
         return bestMove;
-    };
-
-    const handleClick = (index: number) => {
-        if (winInfo.winner || board[index]) return;
+    };    const handleClick = (index: number) => {
+        if (winInfo.winner || board[index] || isAIThinking) return;
 
         const newBoard = [...board];
         newBoard[index] = 'X';
         setBoard(newBoard);
         setIsXNext(false);
+        setIsAIThinking(true);
 
         const result = calculateWinner(newBoard);
         if (result.winner) {
@@ -107,12 +107,14 @@ function TicTacToe() {
     };    useEffect(() => {
         if (!isXNext && !winInfo.winner && !board.every(cell => cell !== null)) {
             // AI's turn
+            setIsAIThinking(true);
             setTimeout(() => {
                 const bestMove = findBestMove([...board]);
                 const newBoard = [...board];
                 newBoard[bestMove] = 'O';
                 setBoard(newBoard);
                 setIsXNext(true);
+                setIsAIThinking(false);
 
                 const result = calculateWinner(newBoard);
                 if (result.winner) {
@@ -122,13 +124,13 @@ function TicTacToe() {
                         ai: prev.ai + 1
                     }));
                 }
-                
-                // Animate the O placement
+                  // Animate the O placement
                 gsap.from(`#cell-${bestMove}`, {
                     scale: 0,
                     duration: 0.3,
                     ease: "back.out(1.7)"
                 });
+                setIsAIThinking(false);
             }, 500);
         }
     }, [isXNext, board, winInfo.winner]);
@@ -189,7 +191,7 @@ function TicTacToe() {
                             {winInfo.winner 
                                 ? `Winner: ${winInfo.winner === 'X' ? 'You' : 'AI'}!` 
                                 : board.every(cell => cell) 
-                                    ? "It's a draw!" 
+                                    ? "It's a draw!"
                                     : `${isXNext ? 'Your' : "AI's"} turn`}
                         </p>
                     </div>
@@ -204,9 +206,11 @@ function TicTacToe() {
                                 className={`h-24 text-4xl font-bold flex items-center justify-center border border-teal-500
                                     ${winInfo.line?.includes(index) 
                                         ? 'bg-teal-600 text-white' 
+                                        : isAIThinking
+                                        ? 'bg-gray-900 cursor-not-allowed text-gray-600'
                                         : 'bg-gray-800 hover:bg-gray-700 text-teal-300'
                                     } rounded-lg transition-colors duration-200`}
-                                disabled={Boolean(cell) || Boolean(winInfo.winner)}
+                                disabled={Boolean(cell) || isAIThinking || Boolean(winInfo.winner)}
                             >
                                 {cell}
                             </button>
@@ -220,6 +224,7 @@ function TicTacToe() {
                                 setBoard(Array(9).fill(null));
                                 setIsXNext(true);
                                 setWinInfo({ winner: null, line: null });
+                                setIsAIThinking(false);
                             }}
                             className="bg-gradient-to-r from-teal-500 to-indigo-500 
                                      hover:from-indigo-500 hover:to-teal-500 text-white 

