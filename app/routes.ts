@@ -8,5 +8,6 @@ export default [
     route("contact", "routes/contact.tsx"),
     route("projects/rps", "projects/RockPaperScissors.tsx"),
     route("projects/xo", "projects/xo.tsx"),
-    route("projects/wifi-qr", "projects/wifi-qr.tsx")
+    route("projects/wifi-qr", "projects/wifi-qr.tsx"),
+    route("noturbusiness", "routes/noturbusiness.tsx")
 ] satisfies RouteConfig;
