@@ -7,7 +7,7 @@ export default function SecretPage() {
   const [unlocked, setUnlocked] = useState(false);
   const [pass, setPass] = useState("");
 
-  const PASSWORD = "N07 UR 8U51N355"; // ← غيّرها لباسورد سري تحبه
+  const PASSWORD = process.env.SECRET_PASSWORD; // ← غيّرها لباسورد سري تحبه
 
   const fetchLogs = async () => {
     setStatus("📥 جاري تحميل البيانات...");

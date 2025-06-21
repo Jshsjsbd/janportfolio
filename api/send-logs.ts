@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db } from './firebase.js';
 import { ref, get, remove } from 'firebase/database';
 
-const webhookUrl = "https://discord.com/api/webhooks/1385984541805510817/kswV7o7m2Hb44Y5ryjNJMBed1p-0ibP-3mGLVJzZnEz5k3UfPYnL567OoBTdihGNrDPP";
+const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).end("Method not allowed");
@@ -19,6 +19,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const message = `📦 **Beacon Logs (${entries.length})**\n\n` + entries.join("\n\n");
 
+    if (!webhookUrl) {
+      throw new Error("DISCORD_WEBHOOK_URL environment variable is not set.");
+    }
     await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
