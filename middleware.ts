@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // 🛑 قائمة الـ IPs الممنوعة
-const bannedIPs = ["156.196.222.180"];
+const bannedIPs = [" "];
 
 export function middleware(request: NextRequest) {
   const forwardedFor = request.headers.get("x-forwarded-for");
