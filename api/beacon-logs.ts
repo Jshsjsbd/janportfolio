@@ -1,32 +1,31 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import fs from 'fs';
-import path from 'path';
+import { db } from '../lib/firebase';
+import { ref, get, remove } from 'firebase/database';
 
-const storagePath = path.resolve('/tmp/beacons.json');
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const logsRef = ref(db, 'beacons');
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
-  try {
-    if (req.method === "GET") {
-      if (!fs.existsSync(storagePath)) {
-        console.log("📁 ملف التخزين غير موجود");
-        return res.status(200).json({ entries: [], lastSent: 0 });
-      }
+  if (req.method === "GET") {
+    try {
+      const snapshot = await get(logsRef);
+      if (!snapshot.exists()) return res.status(200).json({ entries: [] });
 
-      const data = fs.readFileSync(storagePath, 'utf-8');
-      const parsed = JSON.parse(data);
-      console.log("📦 تم قراءة البيانات:", parsed);
-      return res.status(200).json(parsed);
+      const data = snapshot.val();
+      const entries = Object.values(data).map((item: any) => item.content);
+      res.status(200).json({ entries });
+    } catch (err) {
+      console.error("❌ Error fetching logs:", err);
+      res.status(500).json({ error: "Error reading logs" });
     }
+  }
 
-    if (req.method === "DELETE") {
-      fs.writeFileSync(storagePath, JSON.stringify({ entries: [], lastSent: Date.now() }, null, 2));
-      console.log("🗑️ تم مسح البيانات المخزنة");
-      return res.status(200).json({ success: true });
+  if (req.method === "DELETE") {
+    try {
+      await remove(logsRef);
+      res.status(200).json({ success: true });
+    } catch (err) {
+      console.error("❌ Error deleting logs:", err);
+      res.status(500).json({ error: "Error deleting logs" });
     }
-
-    res.status(405).json({ error: "Method Not Allowed" });
-  } catch (err) {
-    console.error("❌ خطأ:", err);
-    res.status(500).json({ error: "فشل في المعالجة" });
   }
 }

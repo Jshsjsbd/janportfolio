@@ -16,6 +16,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/three": "^0.177.0",
     "chart.js": "^4.4.9",
+    "firebase": "^11.9.1",
     "gsap": "^3.13.0",
     "isbot": "^5.1.27",
     "ldrs": "^1.1.7",
