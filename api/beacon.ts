@@ -34,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const secret = process.env.FIREBASE_SECRET!;
   console.log("🔐 Using Firebase path:", `secure_beacons/${secret}`);
 
-  await push(ref(db, `secure_beacons/${secret}`), {
+  await push(ref(db, `secure_beacons/${secret}/logs`), {
     content,
     timestamp: Date.now()
   });

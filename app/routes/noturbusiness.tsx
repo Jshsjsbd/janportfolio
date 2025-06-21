@@ -127,7 +127,7 @@ export default function SecretPage() {
           ) : (
             <>
               <h1 style={{ fontSize: "2.1rem", fontWeight: 900, color: "#11ffd6", marginBottom: 8, letterSpacing: 1 }}>
-                Secret Control Page 🕵️
+                Logs Control Panel 🕵️
               </h1>
               <p style={{ marginBottom: 20, color: "#bebec6" }}>
                 Here you can control the beacon logs.

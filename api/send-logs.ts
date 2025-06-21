@@ -9,7 +9,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).end("Method not allowed");
 
   const secret = process.env.FIREBASE_SECRET!;
-  const logsRef = ref(db, `secure_beacons/${secret}`);
+  const logsRef = ref(db, `secure_beacons/${secret}/logs`);
 
 
   try {
