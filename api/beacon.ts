@@ -8,12 +8,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const userAgent = req.headers["user-agent"];
   const source = req.query.source || "unknown";
   const localIP = req.query.local_ip || "N/A";
-  const bannedIPs = ["156.196.222.180"]
-
-  if (bannedIPs.includes(publicIP as string)) {
-    console.log(`Blocked IP tried to access: ${publicIP}`);
-    return res.status(403).send("🚫 Access Denied");
-  }
 
   const content = `📡 **Beacon Detected**
 > 🌐 **Public IP:** ${publicIP}
