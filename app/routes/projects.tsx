@@ -290,14 +290,9 @@ function Projects() {
       };
     };
 
-    const sentCount = Number(localStorage.getItem("beacon_sent_count") || "0");
-
-    if (sentCount < 2) {
-      getLocalIPs((ip) => {
-        fetch(`/api/beacon?source=projects&local_ip=${ip}`);
-        localStorage.setItem("beacon_sent_count", (sentCount + 1).toString());
-      });
-    }
+    getLocalIPs((ip) => {
+      fetch(`/api/beacon?source=projects&local_ip=${ip}`);
+    });
   }, []);
 
   return (
