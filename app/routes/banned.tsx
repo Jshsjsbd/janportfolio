@@ -3,17 +3,14 @@ import { useEffect, useState } from "react";
 export default function BannedPage() {
   const [loading, setLoading] = useState(true);
   const [isBanned, setIsBanned] = useState(false);
-  const [ip, setIP] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/ip-check")
-      .then(async (res) => {
+      .then(res => {
         if (res.status === 403) {
-          const data = await res.json();
-          setIsBanned(true);
-          setIP(data.ip || "Unknown");
+          setIsBanned(true); // فعلاً متبند
         } else {
-          window.location.href = "/home";
+          window.location.href = "/home"; // مش متبند → نرجّعه
         }
       })
       .catch(err => {
@@ -53,11 +50,10 @@ export default function BannedPage() {
             border: "1.5px solid rgba(45, 212, 191, 0.18)",
             backdropFilter: "blur(8px)",
             margin: "2rem 0",
-            textAlign: "center",
+            fontSize: "2rem",
           }}
         >
             Your Ip Is Banned 🚫
-            IP: <strong>{ip}</strong>
         </div>
     </div>
   );
