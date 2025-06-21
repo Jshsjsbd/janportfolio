@@ -8,6 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   switch (req.method) {
     case "GET": {
       if (!fs.existsSync(storagePath)) {
+        console.log("📁 ملف التخزين غير موجود");
         return res.status(200).json({ entries: [], lastSent: 0 });
       }
 
@@ -16,6 +17,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const parsed = JSON.parse(data);
         return res.status(200).json(parsed);
       } catch (e) {
+        console.error("❌ خطأ أثناء قراءة البيانات:", e);
         return res.status(500).json({ error: "فشل في قراءة البيانات." });
       }
     }
@@ -27,6 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         return res.status(200).json({ success: true });
       } catch (e) {
+        console.error("❌ خطأ أثناء حذف البيانات:", e);
         return res.status(500).json({ error: "فشل في حذف البيانات." });
       }
     }
