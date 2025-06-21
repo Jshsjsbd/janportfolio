@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db } from './firebase.js';
 import { ref, get, remove } from 'firebase/database';
 
-const webhookUrl = "https://discord.com/api/webhooks/1385879633068687382/U-jTEIVNuVEOYCL6hbx0oRMnhm49kJBqAeh_d1yX0ziE37E92lXpuu8tjJMG-dypj1UL";
+const webhookUrl = "https://discord.com/api/webhooks/1385984541805510817/kswV7o7m2Hb44Y5ryjNJMBed1p-0ibP-3mGLVJzZnEz5k3UfPYnL567OoBTdihGNrDPP";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).end("Method not allowed");
