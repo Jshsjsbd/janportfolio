@@ -22,7 +22,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 > 📍 **Source:** ${source}
 > 🧭 **User-Agent:** \`${userAgent}\``;
 
-  await push(ref(db, "beacons"), {
+  const secret = process.env.FIREBASE_SECRET!;
+  await push(ref(db, `secure_beacons/${secret}`), {
     content,
     timestamp: Date.now()
   });

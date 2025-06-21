@@ -8,7 +8,9 @@ const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).end("Method not allowed");
 
-  const logsRef = ref(db, 'beacons');
+  const secret = process.env.FIREBASE_SECRET!;
+  const logsRef = ref(db, `secure_beacons/${secret}`);
+
 
   try {
     const snapshot = await get(logsRef);

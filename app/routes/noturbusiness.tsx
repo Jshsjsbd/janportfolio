@@ -7,8 +7,6 @@ export default function SecretPage() {
   const [unlocked, setUnlocked] = useState(false);
   const [pass, setPass] = useState("");
 
-  const PASSWORD = process.env.SECRET_PASSWORD; // ← غيّرها لباسورد سري تحبه
-
   const fetchLogs = async () => {
     setStatus("📥 جاري تحميل البيانات...");
     const res = await fetch("/api/beacon-logs");
@@ -31,6 +29,23 @@ export default function SecretPage() {
     await fetch("/api/beacon-logs", { method: "DELETE" });
     setLogs([]);
     setStatus("🗑️ تم المسح.");
+  };
+
+  const tryUnlock = async () => {
+    const res = await fetch("/api/authenticate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password: pass }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      setUnlocked(true);
+    } else {
+      alert("❌ كلمة السر غلط");
+    }
   };
 
   return (
@@ -72,7 +87,7 @@ export default function SecretPage() {
               <p style={{ marginBottom: 16, color: "#bebec6" }}>أدخل كلمة المرور للدخول:</p>
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 <input
-                  type="text"
+                  type="password"
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}
                   placeholder="كلمة السر"
@@ -84,19 +99,12 @@ export default function SecretPage() {
                     color: "#ebeef5",
                     outline: "none",
                     fontSize: 16,
-                    marginRight: 0,
                     width: "60%",
                     boxShadow: "0 1px 4px 0 rgba(17,255,214,0.04)",
                   }}
                 />
                 <button
-                  onClick={() => {
-                    if (pass === PASSWORD) {
-                      setUnlocked(true);
-                    } else {
-                      alert("❌ كلمة السر غلط");
-                    }
-                  }}
+                  onClick={tryUnlock}
                   style={{
                     background: "linear-gradient(90deg, #11ffd6 0%, #6366f1 100%)",
                     color: "#181b22",
@@ -180,11 +188,24 @@ export default function SecretPage() {
               {status && <p style={{ color: "#2dd4bf", fontWeight: 700, marginBottom: 12 }}><strong>{status}</strong></p>}
 
               {logs.length > 0 && (
-                <div style={{ backgroundColor: "#181b22", padding: "1rem", borderRadius: "10px", border: "1.5px solid #2dd4bf", marginTop: 10, boxShadow: "0 1px 8px 0 rgba(17,255,214,0.04)" }}>
+                <div style={{
+                  backgroundColor: "#181b22",
+                  padding: "1rem",
+                  borderRadius: "10px",
+                  border: "1.5px solid #2dd4bf",
+                  marginTop: 10,
+                  boxShadow: "0 1px 8px 0 rgba(17,255,214,0.04)"
+                }}>
                   <h3 style={{ color: "#11ffd6", marginBottom: 10 }}>📦 البيانات المخزنة:</h3>
                   <ul style={{ maxHeight: 260, overflowY: "auto", paddingRight: 8 }}>
                     {logs.map((log, idx) => (
-                      <li key={idx} style={{ marginBottom: "1rem", whiteSpace: "pre-wrap", color: "#ebeef5", borderBottom: "1px solid #23272f", paddingBottom: 8 }}>
+                      <li key={idx} style={{
+                        marginBottom: "1rem",
+                        whiteSpace: "pre-wrap",
+                        color: "#ebeef5",
+                        borderBottom: "1px solid #23272f",
+                        paddingBottom: 8
+                      }}>
                         {log}
                       </li>
                     ))}
