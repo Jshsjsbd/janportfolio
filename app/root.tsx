@@ -10,7 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import Loader from "./components/loader";
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation } from "react-router";
 import { NavigationProvider } from "./components/MobileNav";
 
@@ -59,6 +59,18 @@ export default function App() {
 
     return () => clearTimeout(timer);
   }, [location.pathname]); // 👈 هذا هو السر
+
+  useEffect(() => {
+    fetch("/api/ip-check")
+      .then(res => {
+        if (res.status === 403) {
+          window.location.href = "/banned";
+        }
+      })
+      .catch(err => {
+        console.error("IP check failed", err);
+      });
+  }, []);
 
   return (
     <html lang="en">
