@@ -61,16 +61,16 @@ export default function App() {
   }, [location.pathname]); // 👈 هذا هو السر
 
   useEffect(() => {
+    if (location.pathname === "/banned") return;
+
     fetch("/api/ip-check")
       .then(res => {
         if (res.status === 403) {
           window.location.href = "/banned";
         }
       })
-      .catch(err => {
-        console.error("IP check failed", err);
-      });
-  }, []);
+      .catch((err) => console.error("IP check failed", err));
+  }, [location.pathname]);
 
   return (
     <html lang="en">
