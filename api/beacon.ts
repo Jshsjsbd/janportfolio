@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-const { db } = require('./firebase.js');
+// @ts-ignore
+import { db } from './firebase.js';
 import { ref, push } from 'firebase/database';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
