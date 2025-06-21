@@ -65,7 +65,7 @@ export default function SecretPage() {
 
   const addIp = async () => {
     const ip = ipInput.trim();
-    if (!ip) return alert("أدخل IP صحيح");
+    if (!ip) return alert("Enter a valid IP");
     if (bannedIps.includes(ip)) return setIpStatus("⚠️ This IP Is Already Banned");
 
     const res = await fetch("/api/banned-ips", {

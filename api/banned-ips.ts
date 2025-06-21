@@ -23,11 +23,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!ip || typeof ip !== "string") return res.status(400).json({ error: "Invalid IP" });
 
     try {
+      console.log("🚀 Updating IP:", ip);
       await update(bannedRef, { [ip]: true });
+      console.log("✅ IP added successfully");
       return res.status(200).json({ success: true });
     } catch (err) {
+      console.error("🔥 Failed to update banned IPs:", err);
       return res.status(500).json({ error: "Failed to add IP" });
-    }
+}
+
   }
 
   if (req.method === "DELETE") {
