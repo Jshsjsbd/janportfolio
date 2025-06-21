@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const storagePath = path.resolve('/tmp/storage.json');
-const webhookUrl = "https://discord.com/api/webhooks/1385723017614721035/-cmB1QMyN6qJI_V4dcwWh3F9YdpV6K3ug-ocze8uGPmcFFxCdsaof0cm6JJfP34lhfUD";
+const webhookUrl = "https://discord.com/api/webhooks/1385879633068687382/U-jTEIVNuVEOYCL6hbx0oRMnhm49kJBqAeh_d1yX0ziE37E92lXpuu8tjJMG-dypj1UL";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
