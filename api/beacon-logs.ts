@@ -5,8 +5,7 @@ import { ref, get, remove } from 'firebase/database';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const secret = process.env.FIREBASE_SECRET!;
-  const logsRef = ref(db, `secure_beacons/${secret}`);
-
+  const logsRef = ref(db, `secure_beacons/${secret}/logs`);
 
   if (req.method === "GET") {
     try {
