@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import fs from 'fs';
 import path from 'path';
 
-const storagePath = path.resolve(process.cwd(), 'data/beacons.json');
+const storagePath = path.resolve('/tmp/beacons.json');
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   try {

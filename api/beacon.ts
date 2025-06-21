@@ -2,8 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import fs from 'fs';
 import path from 'path';
 
-// مسار الملف الدائم
-const storagePath = path.resolve(process.cwd(), 'data/beacons.json');
+const storagePath = path.resolve('/tmp/beacons.json');
 
 function readStorage() {
   if (!fs.existsSync(storagePath)) {
@@ -37,7 +36,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   entries.push(content);
   writeStorage(entries, lastSent);
 
-  console.log("📥 Beacon stored to project-level file");
+  console.log("📥 Beacon stored to /tmp/beacons.json");
 
   const pixel = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAokB9AcPjGgAAAAASUVORK5CYII=",
