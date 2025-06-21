@@ -10,7 +10,7 @@ export default function BannedPage() {
         if (res.status === 403) {
           setIsBanned(true); // فعلاً متبند
         } else {
-          window.location.href = "/home"; // مش متبند → نرجّعه
+          window.location.href = "/"; // مش متبند → نرجّعه
         }
       })
       .catch(err => {
