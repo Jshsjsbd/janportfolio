@@ -50,7 +50,9 @@ export default function BannedPage() {
             border: "1.5px solid rgba(45, 212, 191, 0.18)",
             backdropFilter: "blur(8px)",
             margin: "2rem 0",
-            fontSize: "2rem",
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "1.5rem",
           }}
         >
             Your Ip Is Banned 🚫
