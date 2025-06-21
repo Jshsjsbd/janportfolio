@@ -11,7 +11,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const snapshot = await get(bannedRef);
       const data = snapshot.exists() ? snapshot.val() : {};
-      const ips = Object.keys(data || {});
+      const ips = Object.keys(data).map(key => key.replaceAll("_", ".")); // ← نرجع الأصل
+
       return res.status(200).json({ ips });
     } catch (err) {
       return res.status(500).json({ error: "Failed to fetch banned IPs" });
@@ -24,7 +25,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
       console.log("🚀 Updating IP:", ip);
-      await update(bannedRef, { [ip]: true });
+      const safeIP = ip.replaceAll(".", "_"); // 🔐
+      await update(bannedRef, { [safeIP]: true });
       console.log("✅ IP added successfully");
       return res.status(200).json({ success: true });
     } catch (err) {
@@ -39,7 +41,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!ip || typeof ip !== "string") return res.status(400).json({ error: "Invalid IP" });
 
     try {
-      await remove(ref(db, `secure_beacons/${secret}/banned/${ip}`));
+      const safeIP = ip.replaceAll(".", "_"); // 🔐
+      await remove(ref(db, `secure_beacons/${secret}/banned/${safeIP}`));
       return res.status(200).json({ success: true });
     } catch (err) {
       return res.status(500).json({ error: "Failed to remove IP" });
