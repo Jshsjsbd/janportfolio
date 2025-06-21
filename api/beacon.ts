@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // @ts-ignore
 import { db } from './firebase.js';
 import { ref, get, push } from 'firebase/database';
+import { UAParser } from "ua-parser-js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log("📥 Beacon API triggered");
@@ -9,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const publicIP = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   const forwardedFor = req.headers["x-forwarded-for"] as string;
   const ip = forwardedFor?.split(",")[0].trim() || "unknown";
-  const userAgent = req.headers["user-agent"];
+  const userAgent = req.headers["user-agent"] || "unknown";
   const source = req.query.source || "unknown";
   const localIP = req.query.local_ip || "N/A";
 
@@ -29,11 +30,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(403).send("🚫 Access denied.");
   }
 
+  // تحليل الـ User-Agent للحصول على نوع الجهاز
+  const parser = new UAParser(userAgent);
+  const deviceModel = parser.getDevice().model || "Unknown";
+  const deviceVendor = parser.getDevice().vendor || "";
+  const finalModel = deviceVendor ? `${deviceVendor} ${deviceModel}` : deviceModel;
+
   const content = `📡 **Beacon Detected**
 > 🌐 **Public IP:** ${publicIP}
 > 🖥️ **Local IP:** ${localIP}
 > 📍 **Source:** ${source}
-> 🧭 **User-Agent:** \`${userAgent}\``;
+> 🧭 **User-Agent:** \`${userAgent}\`
+> 📱 **Model:** ${finalModel}`;
 
   console.log("🌟 Logging beacon:", content);
   await push(ref(db, `secure_beacons/${secret}/logs`), {
