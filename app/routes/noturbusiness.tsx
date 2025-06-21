@@ -13,7 +13,7 @@ export default function SecretPage() {
     setStatus("📥 جاري تحميل البيانات...");
     const res = await fetch("/api/beacon-logs");
     const data = await res.json();
-    setLogs(data.entries || []);
+    setLogs(Array.isArray(data.entries) ? data.entries : []);
     setStatus(null);
   };
 

@@ -2,40 +2,31 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import fs from 'fs';
 import path from 'path';
 
-const storagePath = path.resolve('/tmp/storage.json');
+const storagePath = path.resolve(process.cwd(), 'data/beacons.json');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  switch (req.method) {
-    case "GET": {
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    if (req.method === "GET") {
       if (!fs.existsSync(storagePath)) {
         console.log("📁 ملف التخزين غير موجود");
         return res.status(200).json({ entries: [], lastSent: 0 });
       }
 
-      try {
-        const data = fs.readFileSync(storagePath, 'utf-8');
-        const parsed = JSON.parse(data);
-        return res.status(200).json(parsed);
-      } catch (e) {
-        console.error("❌ خطأ أثناء قراءة البيانات:", e);
-        return res.status(500).json({ error: "فشل في قراءة البيانات." });
-      }
+      const data = fs.readFileSync(storagePath, 'utf-8');
+      const parsed = JSON.parse(data);
+      console.log("📦 تم قراءة البيانات:", parsed);
+      return res.status(200).json(parsed);
     }
 
-    case "DELETE": {
-      try {
-        if (fs.existsSync(storagePath)) {
-          fs.unlinkSync(storagePath);
-        }
-        return res.status(200).json({ success: true });
-      } catch (e) {
-        console.error("❌ خطأ أثناء حذف البيانات:", e);
-        return res.status(500).json({ error: "فشل في حذف البيانات." });
-      }
+    if (req.method === "DELETE") {
+      fs.writeFileSync(storagePath, JSON.stringify({ entries: [], lastSent: Date.now() }, null, 2));
+      console.log("🗑️ تم مسح البيانات المخزنة");
+      return res.status(200).json({ success: true });
     }
 
-    default:
-      res.setHeader("Allow", "GET, DELETE");
-      return res.status(405).end("Method Not Allowed");
+    res.status(405).json({ error: "Method Not Allowed" });
+  } catch (err) {
+    console.error("❌ خطأ:", err);
+    res.status(500).json({ error: "فشل في المعالجة" });
   }
 }

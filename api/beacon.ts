@@ -2,9 +2,10 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import fs from 'fs';
 import path from 'path';
 
-const storagePath = path.resolve('/tmp/storage.json');
+// مسار الملف الدائم
+const storagePath = path.resolve(process.cwd(), 'data/beacons.json');
 
-function readStorage(): { entries: string[]; lastSent: number } {
+function readStorage() {
   if (!fs.existsSync(storagePath)) {
     return { entries: [], lastSent: 0 };
   }
@@ -18,10 +19,10 @@ function readStorage(): { entries: string[]; lastSent: number } {
 }
 
 function writeStorage(entries: string[], lastSent: number) {
-  fs.writeFileSync(storagePath, JSON.stringify({ entries, lastSent }));
+  fs.writeFileSync(storagePath, JSON.stringify({ entries, lastSent }, null, 2));
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default function handler(req: VercelRequest, res: VercelResponse) {
   const publicIP = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   const userAgent = req.headers["user-agent"];
   const source = req.query.source || "unknown";
@@ -33,11 +34,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 > 🧭 **User-Agent:** \`${userAgent}\``;
 
   const { entries, lastSent } = readStorage();
-
   entries.push(content);
   writeStorage(entries, lastSent);
 
-  console.log("📝 Beacon stored (no bot filter)");
+  console.log("📥 Beacon stored to project-level file");
 
   const pixel = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAokB9AcPjGgAAAAASUVORK5CYII=",

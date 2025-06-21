@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const webhookUrl = "https://discord.com/api/webhooks/1385723017614721035/-cmB1QMyN6qJI_V4dcwWh3F9YdpV6K3ug-ocze8uGPmcFFxCdsaof0cm6JJfP34lhfUD";
-const storagePath = path.resolve('/tmp/storage.json');
+const storagePath = path.resolve(process.cwd(), 'data/beacons.json');
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -24,14 +24,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log("📨 جاري إرسال عدد:", entries.length);
 
     for (const entry of entries) {
-      const content = entry.slice(0, 1900);
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content: entry.slice(0, 1900) }),
       });
-
-      console.log("➡️ إرسال رسالة:", content);
 
       if (!response.ok) {
         console.error("❌ فشل في الإرسال:", response.status, await response.text());
@@ -39,8 +36,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // ✅ مسح بعد الإرسال
-    fs.writeFileSync(storagePath, JSON.stringify({ entries: [], lastSent: Date.now() }));
+    // ✅ بعد الإرسال: مسح الملف
+    fs.writeFileSync(storagePath, JSON.stringify({ entries: [], lastSent: Date.now() }, null, 2));
     console.log("✅ تم الإرسال ومسح البيانات");
 
     res.status(200).json({ success: true });
