@@ -163,7 +163,7 @@ export default function SecretPage() {
                 {/* ... كود الـ logs كما عندك ... */}
 
                 {/* 👇 الجزء الجديد: Form إدارة الـ IPs */}
-                <h2 style={{ fontSize: "2rem", color: "#11ffd6" }}>❌ IPs Control Panel</h2>
+                <h2 style={{ fontSize: "2rem", color: "#11ffd6", fontWeight: 900 }}>❌ IPs Control Panel</h2>
                 <div style={{ display: "flex", gap: 20, marginTop: 30, flexDirection: "column" }}>
                     <div style={{width: "100%"}}>
                         <input
