@@ -5,23 +5,24 @@ import { ref, get } from 'firebase/database';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const secret = process.env.FIREBASE_SECRET!;
-  const ip =
+  const ip = (
     (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() ||
     req.socket.remoteAddress ||
-    "unknown";
+    "unknown"
+  ).replaceAll(".", "_"); // ← بنفس صيغة التخزين
 
-  const safeIP = ip.replaceAll(".", "_"); // ✅ لازم نستخدم الشكل المشفر
+  console.log("🔍 Checking IP:", ip);
 
   try {
-    const bannedRef = ref(db, `secure_beacons/${secret}/banned`);
+    const bannedRef = ref(db, `secure_beacons/${secret}/banned/${ip}`);
     const snapshot = await get(bannedRef);
-    const banned = snapshot.exists() ? snapshot.val() : {};
-    const isBanned = !!banned[safeIP];
 
-    if (isBanned) {
+    if (snapshot.exists()) {
+      console.log("🚫 This IP is banned");
       return res.status(403).json({ banned: true, ip });
     }
 
+    console.log("✅ This IP is allowed");
     return res.status(200).json({ banned: false });
   } catch (err) {
     console.error("❌ IP check failed:", err);

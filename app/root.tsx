@@ -65,6 +65,7 @@ export default function App() {
 
     fetch("/api/ip-check")
       .then(res => {
+        console.log("🎯 ip-check status:", res.status);
         if (res.status === 403) {
           window.location.href = "/banned";
         }
