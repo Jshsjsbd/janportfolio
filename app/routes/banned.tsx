@@ -62,7 +62,7 @@ export default function BannedPage() {
           fontSize: "1.5rem",
         }}
       >
-        🚫 تم حظرك من الوصول إلى هذا الموقع
+        🚫 Your IP Is Banned From An Administrator
         <br /><br />
         {ip && <span style={{ fontSize: "1rem", color: "#ccc" }}>IP: {ip}</span>}
         <br /><br />
