@@ -10,11 +10,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     req.socket.remoteAddress ||
     "unknown";
 
+  const safeIP = ip.replaceAll(".", "_"); // ✅ لازم نستخدم الشكل المشفر
+
   try {
     const bannedRef = ref(db, `secure_beacons/${secret}/banned`);
     const snapshot = await get(bannedRef);
     const banned = snapshot.exists() ? snapshot.val() : {};
-    const isBanned = !!banned[ip];
+    const isBanned = !!banned[safeIP];
 
     if (isBanned) {
       return res.status(403).json({ banned: true, ip });
