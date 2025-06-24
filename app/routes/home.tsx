@@ -308,7 +308,7 @@ function Home() {
       />
       <Header type='home' />
       <section className="relative pt-32 pb-44 flex flex-col items-center justify-center min-h-screen text-center z-10">
-        <h2 className="mt-10 text-2xl md:text-3xl font-medium text-teal-200 mb-7">Musician & Swimmer & Front-End Developer</h2>
+        <h2 className="mt-10 text-2xl md:text-3xl font-medium text-teal-200 mb-7">Musician & Swimmer & Web Developer</h2>
         <p className="relative text-lg md:text-xl max-w-xl mx-auto opacity-90 mb-10">
           I’m a curious soul who loves blending creativity and logic, whether it’s
           through coding, music, or solving challenges—always seeking to learn,
