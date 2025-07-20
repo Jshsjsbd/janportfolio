@@ -37,6 +37,8 @@ interface Room {
   timeLimit: number;
   gameStartTime?: number;
   categories: string[];
+  createdAt: number;
+  lastActivity: number;
 }
 
 interface GameStats {
@@ -46,10 +48,6 @@ interface GameStats {
   bestScore: number;
   fastestFinish: number;
 }
-
-const EASY_CATEGORIES = ['boyName', 'girlName', 'plant', 'fruit', 'country'];
-const MEDIUM_CATEGORIES = ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
-const HARD_CATEGORIES = ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color', 'food', 'movie', 'sport'];
 
 const CATEGORY_LABELS: Record<string, string> = {
   boyName: 'Boy Name',
@@ -73,7 +71,7 @@ const StopComplete: React.FC = () => {
   const [selectedLetter, setSelectedLetter] = useState<string>('');
   const [isSelecting, setIsSelecting] = useState(false);
   const [gameMode, setGameMode] = useState<'easy' | 'medium' | 'hard'>('medium');
-  const [timeLimit, setTimeLimit] = useState(300); // 5 minutes default
+  const [timeLimit, setTimeLimit] = useState(300);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [showCopied, setShowCopied] = useState(false);
   const [gameStats, setGameStats] = useState<GameStats>({
@@ -95,9 +93,12 @@ const StopComplete: React.FC = () => {
     movie: '',
     sport: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize audio context
   useEffect(() => {
@@ -109,14 +110,23 @@ const StopComplete: React.FC = () => {
     };
   }, []);
 
+  // Load player stats on component mount
+  useEffect(() => {
+    if (playerName) {
+      loadPlayerStats();
+    }
+  }, [playerName]);
+
   // Timer effect
   useEffect(() => {
-    if (room?.isGameStarted && !isSelecting && timeLeft > 0) {
+    if (room?.isGameStarted && !isSelecting && timeLeft > 0 && room.gameStartTime) {
+      const elapsed = Math.floor((Date.now() - room.gameStartTime) / 1000);
+      const remaining = Math.max(0, timeLimit - elapsed);
+      setTimeLeft(remaining);
+
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
-            // Time's up! Auto-finish for all players
-            handleTimeUp();
             return 0;
           }
           return prev - 1;
@@ -129,9 +139,70 @@ const StopComplete: React.FC = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [room?.isGameStarted, isSelecting, timeLeft]);
+  }, [room?.isGameStarted, isSelecting, timeLimit, room?.gameStartTime]);
 
-  // Play sound effect
+  // Real-time updates with polling
+  useEffect(() => {
+    if (roomId) {
+      setupRealTimeUpdates();
+    }
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [roomId]);
+
+  const setupRealTimeUpdates = () => {
+    // Clear any existing polling
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    // Poll for updates every 2 seconds
+    pollingRef.current = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/stopcomplete-updates?roomId=${roomId}`);
+        const data = await response.json();
+        
+        if (data.error) {
+          setError(data.error);
+        } else if (data.room) {
+          const updatedRoom = data.room;
+          setRoom(updatedRoom);
+          setIsHost(updatedRoom.host === playerName);
+          
+          // Handle letter selection animation
+          if (updatedRoom.isGameStarted && updatedRoom.selectedLetter && !isSelecting) {
+            handleLetterSelection(updatedRoom.selectedLetter);
+          }
+        }
+      } catch (error) {
+        console.error('Error polling for updates:', error);
+        setError('Connection lost. Please refresh the page.');
+      }
+    }, 2000);
+  };
+
+  const handleLetterSelection = (letter: string) => {
+    setIsSelecting(true);
+    playSound(440);
+
+    let count = 0;
+    const interval = setInterval(() => {
+      const randomLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+      setSelectedLetter(randomLetter);
+      count++;
+
+      if (count > 20) {
+        clearInterval(interval);
+        setIsSelecting(false);
+        setSelectedLetter(letter);
+      }
+    }, 100);
+  };
+
   const playSound = (frequency: number, duration: number = 200) => {
     if (!audioContext.current) return;
     
@@ -151,44 +222,91 @@ const StopComplete: React.FC = () => {
     oscillator.stop(audioContext.current.currentTime + duration / 1000);
   };
 
-  const getCategoriesForMode = (mode: 'easy' | 'medium' | 'hard') => {
-    switch (mode) {
-      case 'easy': return EASY_CATEGORIES;
-      case 'medium': return MEDIUM_CATEGORIES;
-      case 'hard': return HARD_CATEGORIES;
+  const loadPlayerStats = async () => {
+    try {
+      const response = await fetch(`/api/stopcomplete-stats?playerName=${encodeURIComponent(playerName)}`);
+      const data = await response.json();
+      if (data.stats) {
+        setGameStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
     }
   };
 
-  const createRoom = () => {
-    if (!playerName.trim() || !password.trim()) return alert("Name and password required");
+  const apiCall = async (endpoint: string, data: any) => {
+    setIsLoading(true);
+    setError(null);
     
-    playSound(440); // A note
-    
-    const categories = getCategoriesForMode(gameMode);
-    const newRoom: Room = {
-      id: Math.random().toString(36).substr(2, 9),
-      password,
-      host: playerName,
-      players: [playerName],
-      isGameStarted: false,
-      finishedPlayers: [],
-      gameMode,
-      timeLimit,
-      categories
-    };
-    setRoom(newRoom);
-    setIsHost(true);
-    setRoomId(newRoom.id);
+    try {
+      const response = await fetch(`/api/${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'API call failed');
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const joinRoom = () => {
-    if (!playerName.trim() || !roomId.trim() || !password.trim()) return alert("Missing fields");
-    if (!room || room.password !== password) return alert("Room not found or wrong password");
-    if (room.players.includes(playerName)) return alert("Player already in room");
+  const createRoom = async () => {
+    if (!playerName.trim() || !password.trim()) {
+      setError("Name and password required");
+      return;
+    }
 
-    playSound(523); // C note
-    
-    setRoom(prev => prev ? { ...prev, players: [...prev.players, playerName] } : prev);
+    try {
+      const result = await apiCall('stopcomplete-rooms', {
+        action: 'create',
+        playerName,
+        password,
+        gameMode,
+        timeLimit
+      });
+
+      setRoom(result.room);
+      setRoomId(result.roomId);
+      setIsHost(true);
+      playSound(440);
+    } catch (error) {
+      // Error already set by apiCall
+    }
+  };
+
+  const joinRoom = async () => {
+    if (!playerName.trim() || !roomId.trim() || !password.trim()) {
+      setError("Missing fields");
+      return;
+    }
+
+    try {
+      const result = await apiCall('stopcomplete-rooms', {
+        action: 'join',
+        roomId,
+        playerName,
+        password
+      });
+
+      setRoom(result.room);
+      setIsHost(result.room.host === playerName);
+      playSound(523);
+    } catch (error) {
+      // Error already set by apiCall
+    }
   };
 
   const copyRoomId = async () => {
@@ -196,177 +314,129 @@ const StopComplete: React.FC = () => {
       await navigator.clipboard.writeText(roomId);
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
-      playSound(659); // E note
+      playSound(659);
     } catch (err) {
-      console.error('Failed to copy room ID');
+      setError('Failed to copy room ID');
     }
   };
 
-  const kickPlayer = (playerToKick: string) => {
+  const kickPlayer = async (playerToKick: string) => {
     if (!isHost || playerToKick === playerName) return;
-    
-    setRoom(prev => prev ? {
-      ...prev,
-      players: prev.players.filter(p => p !== playerToKick),
-      finishedPlayers: prev.finishedPlayers.filter(p => p.player !== playerToKick)
-    } : prev);
-    
-    playSound(330); // E note (lower)
+
+    try {
+      await apiCall('stopcomplete-rooms', {
+        action: 'kick',
+        roomId,
+        playerName,
+        playerToKick
+      });
+      playSound(330);
+    } catch (error) {
+      // Error already set by apiCall
+    }
   };
 
-  const startGame = () => {
+  const startGame = async () => {
     if (!isHost || !room) return;
-    
-    playSound(880); // A note (higher)
-    setIsSelecting(true);
-    setTimeLeft(timeLimit);
 
-    let count = 0;
-    let finalLetter = '';
-    const interval = setInterval(() => {
-      const randomLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-      setSelectedLetter(randomLetter);
-      finalLetter = randomLetter;
-      count++;
-
-      if (count > 20) {
-        clearInterval(interval);
-        setIsSelecting(false);
-        setSelectedLetter(finalLetter);
-        setRoom(prev => prev ? { 
-          ...prev, 
-          isGameStarted: true, 
-          selectedLetter: finalLetter,
-          gameStartTime: Date.now()
-        } : prev);
-      }
-    }, 100);
+    try {
+      await apiCall('stopcomplete-rooms', {
+        action: 'start',
+        roomId,
+        playerName
+      });
+      playSound(880);
+    } catch (error) {
+      // Error already set by apiCall
+    }
   };
 
   const handleAnswerChange = (category: keyof GameAnswer, value: string) => {
     setAnswers(prev => ({ ...prev, [category]: value }));
   };
 
-  const calculateScore = (playerAnswers: GameAnswer, allAnswers: PlayerAnswer[]): { score: number; uniqueAnswers: number } => {
-    let score = 0;
-    let uniqueAnswers = 0;
-    
-    const categories = getCategoriesForMode(room?.gameMode || 'medium');
-    
-    categories.forEach(category => {
-      const answer = playerAnswers[category as keyof GameAnswer];
-      if (answer && answer.trim()) {
-        // Check if this answer is unique
-        const isUnique = !allAnswers.some(otherPlayer => 
-          otherPlayer.player !== playerName && 
-          otherPlayer.answers[category as keyof GameAnswer]?.toLowerCase() === answer.toLowerCase()
-        );
-        
-        if (isUnique) {
-          score += 10;
-          uniqueAnswers++;
-        } else {
-          score += 5;
-        }
-      }
-    });
-    
-    // Bonus for finishing first
-    const finishOrder = allAnswers.findIndex(p => p.player === playerName);
-    if (finishOrder === 0) {
-      score += 20;
-    } else if (finishOrder === 1) {
-      score += 10;
-    }
-    
-    return { score, uniqueAnswers };
-  };
-
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (!room || !playerName) return;
-    
-    const categories = getCategoriesForMode(room.gameMode);
-    const requiredAnswers = categories.filter(cat => 
-      !answers[cat as keyof GameAnswer]?.trim()
-    );
-    
-    if (requiredAnswers.length > 0) {
-      alert(`Please fill in all required fields: ${requiredAnswers.map(cat => CATEGORY_LABELS[cat]).join(', ')}`);
-      return;
-    }
-    
-    playSound(1047); // C note (higher)
-    
-    const { score, uniqueAnswers } = calculateScore(answers, room.finishedPlayers);
-    const playerAnswer: PlayerAnswer = {
-      player: playerName,
-      answers: answers,
-      finishTime: Date.now(),
-      score,
-      uniqueAnswers
-    };
-    
-    setRoom(prev => prev ? {
-      ...prev,
-      finishedPlayers: [...prev.finishedPlayers, playerAnswer]
-    } : prev);
-    
-    // Update stats
-    setGameStats(prev => ({
-      ...prev,
-      totalGames: prev.totalGames + 1,
-      bestScore: Math.max(prev.bestScore, score),
-      averageScore: (prev.averageScore * prev.totalGames + score) / (prev.totalGames + 1)
-    }));
-  };
 
-  const handleTimeUp = () => {
-    if (!room || !playerName) return;
-    
-    playSound(220); // A note (lower)
-    
-    // Auto-finish for current player if not finished
-    if (!room.finishedPlayers.some(p => p.player === playerName)) {
-      const { score, uniqueAnswers } = calculateScore(answers, room.finishedPlayers);
-      const playerAnswer: PlayerAnswer = {
-        player: playerName,
-        answers: answers,
-        finishTime: Date.now(),
-        score,
-        uniqueAnswers
-      };
+    try {
+      const result = await apiCall('stopcomplete-rooms', {
+        action: 'finish',
+        roomId,
+        playerName,
+        answers
+      });
+
+      playSound(1047);
       
-      setRoom(prev => prev ? {
+      // Update local stats
+      setGameStats(prev => ({
         ...prev,
-        finishedPlayers: [...prev.finishedPlayers, playerAnswer]
-      } : prev);
+        totalGames: prev.totalGames + 1,
+        bestScore: Math.max(prev.bestScore, result.score),
+        averageScore: (prev.averageScore * prev.totalGames + result.score) / (prev.totalGames + 1)
+      }));
+    } catch (error) {
+      // Error already set by apiCall
     }
   };
 
-  const resetGame = () => {
+  const resetGame = async () => {
     if (!isHost) return;
-    
-    setRoom(prev => prev ? {
-      ...prev,
-      isGameStarted: false,
-      selectedLetter: undefined,
-      finishedPlayers: [],
-      gameStartTime: undefined
-    } : prev);
-    setAnswers({
-      boyName: '',
-      girlName: '',
-      plant: '',
-      fruit: '',
-      country: '',
-      animal: '',
-      color: '',
-      food: '',
-      movie: '',
-      sport: ''
-    });
-    setTimeLeft(timeLimit);
-    setIsSelecting(false);
+
+    try {
+      await apiCall('stopcomplete-rooms', {
+        action: 'reset',
+        roomId,
+        playerName
+      });
+
+      setAnswers({
+        boyName: '',
+        girlName: '',
+        plant: '',
+        fruit: '',
+        country: '',
+        animal: '',
+        color: '',
+        food: '',
+        movie: '',
+        sport: ''
+      });
+      setTimeLeft(timeLimit);
+      setIsSelecting(false);
+    } catch (error) {
+      // Error already set by apiCall
+    }
+  };
+
+  const leaveRoom = async () => {
+    if (!roomId || !playerName) return;
+
+    try {
+      await apiCall('stopcomplete-rooms', {
+        action: 'leave',
+        roomId,
+        playerName
+      });
+
+      setRoom(null);
+      setRoomId('');
+      setIsHost(false);
+      setAnswers({
+        boyName: '',
+        girlName: '',
+        plant: '',
+        fruit: '',
+        country: '',
+        animal: '',
+        color: '',
+        food: '',
+        movie: '',
+        sport: ''
+      });
+    } catch (error) {
+      // Error already set by apiCall
+    }
   };
 
   const isPlayerFinished = room?.finishedPlayers.some(p => p.player === playerName) || false;
@@ -383,6 +453,12 @@ const StopComplete: React.FC = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-md mx-auto backdrop-blur-md bg-white/10 rounded-xl shadow-lg overflow-hidden p-6 mt-20">
             <h1 className="text-3xl font-bold mb-6 text-center text-white">Stop It's Complete!</h1>
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300">
+                {error}
+              </div>
+            )}
             
             {/* Game Stats */}
             <div className="mb-6 p-4 bg-gray-800/30 rounded-lg">
@@ -455,9 +531,10 @@ const StopComplete: React.FC = () => {
                 />
                 <button
                   onClick={createRoom}
-                  className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out"
+                  disabled={isLoading}
+                  className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Room
+                  {isLoading ? 'Creating...' : 'Create Room'}
                 </button>
               </div>
 
@@ -479,9 +556,10 @@ const StopComplete: React.FC = () => {
                 />
                 <button
                   onClick={joinRoom}
-                  className="w-full bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out"
+                  disabled={isLoading}
+                  className="w-full bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Join Room
+                  {isLoading ? 'Joining...' : 'Join Room'}
                 </button>
               </div>
             </div>
@@ -497,6 +575,12 @@ const StopComplete: React.FC = () => {
       <Header type='projects' />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto backdrop-blur-md bg-white/10 rounded-xl shadow-lg overflow-hidden p-6 mt-20">
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300">
+              {error}
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Room: {room.id}</h1>
             <div className="flex items-center space-x-2">
@@ -509,6 +593,12 @@ const StopComplete: React.FC = () => {
               <span className="px-2 py-1 bg-blue-500/50 rounded-full text-sm">
                 {room.gameMode.charAt(0).toUpperCase() + room.gameMode.slice(1)}
               </span>
+              <button
+                onClick={leaveRoom}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition-colors"
+              >
+                Leave
+              </button>
             </div>
           </div>
 
@@ -555,18 +645,20 @@ const StopComplete: React.FC = () => {
               {isHost && !room.isGameStarted && (
                 <button
                   onClick={startGame}
-                  className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out mb-4"
+                  disabled={isLoading}
+                  className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Start Game
+                  {isLoading ? 'Starting...' : 'Start Game'}
                 </button>
               )}
 
               {isHost && room.isGameStarted && room.finishedPlayers.length === room.players.length && (
                 <button
                   onClick={resetGame}
-                  className="w-full bg-purple-500/80 text-white p-3 rounded-lg font-semibold hover:bg-purple-600 transition duration-300 ease-in-out mb-4"
+                  disabled={isLoading}
+                  className="w-full bg-purple-500/80 text-white p-3 rounded-lg font-semibold hover:bg-purple-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  New Game
+                  {isLoading ? 'Resetting...' : 'New Game'}
                 </button>
               )}
             </div>
@@ -604,9 +696,10 @@ const StopComplete: React.FC = () => {
               {!isPlayerFinished && (
                 <button
                   onClick={handleFinish}
-                  className="w-full mt-6 bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out"
+                  disabled={isLoading}
+                  className="w-full mt-6 bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Finish
+                  {isLoading ? 'Submitting...' : 'Finish'}
                 </button>
               )}
             </div>
