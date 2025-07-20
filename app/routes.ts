@@ -10,6 +10,7 @@ export default [
     route("projects/rps", "projects/RockPaperScissors.tsx"),
     route("projects/xo", "projects/xo.tsx"),
     route("projects/wifi-qr", "projects/wifi-qr.tsx"),
+    route("projects/stopcomplete", "projects/stopcomplete.tsx"),
     route("noturbusiness", "routes/noturbusiness.tsx"),
     route("noturbusiness1", "routes/noturbusiness1.tsx")
 ] satisfies RouteConfig;
