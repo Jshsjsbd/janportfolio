@@ -676,6 +676,9 @@ const StopComplete: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // 1. Add a helper to check if the game is finished for everyone (all players in finishedPlayers):
+  const isGameFinished = room && room.finishedPlayers && room.players && room.finishedPlayers.length === room.players.length;
+
   if (!room) {
     return (
       <div className="min-h-screen text-white">
@@ -927,16 +930,15 @@ const StopComplete: React.FC = () => {
                     placeholder={CATEGORY_LABELS[category]}
                     value={answers[category as keyof GameAnswer]}
                     onChange={(e) => handleAnswerChange(category as keyof GameAnswer, e.target.value)}
-              className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isPlayerFinished}
-            />
+                    className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isPlayerFinished || isGameFinished || false}
+                  />
                 ))}
               </div>
-              
-            {!isPlayerFinished && (
+            {!isPlayerFinished && !isGameFinished && (
               <button
                 onClick={handleFinish}
-                disabled={isPlayerFinished}
+                disabled={isPlayerFinished || isGameFinished || false}
                 className="w-full mt-6 bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Finish
@@ -971,7 +973,7 @@ const StopComplete: React.FC = () => {
                       {room.categories.map(category => (
                         <div key={category}>
                           <span className="text-gray-400">{CATEGORY_LABELS[category]}:</span>
-                          <p className="font-medium">{player.answers[category as keyof GameAnswer] || '-'}</p>
+                          <p className="font-medium">{player.answers[category as keyof GameAnswer]?.trim() ? player.answers[category as keyof GameAnswer] : '--'}</p>
                     </div>
                       ))}
                   </div>
