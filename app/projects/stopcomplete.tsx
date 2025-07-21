@@ -58,6 +58,7 @@ interface Room {
   createdAt: number;
   lastActivity: number;
   isGameFinished: boolean; // Added this field
+  liveAnswers?: { [key: string]: GameAnswer }; // Added this field
 }
 
 interface GameStats {
@@ -481,7 +482,7 @@ const StopComplete: React.FC = () => {
       if (result && typeof result === 'object' && 'room' in result && 'roomId' in result) {
         setRoom(result.room);
         setTimeout(() => setRoomId(result.roomId as string), 0); // ensure setRoom runs first
-        setIsHost(true);
+    setIsHost(true);
         playSound(440);
       } else {
         setError("Failed to create room. Please try again.");
@@ -560,7 +561,19 @@ const StopComplete: React.FC = () => {
   };
 
   const handleAnswerChange = (category: keyof GameAnswer, value: string) => {
-    setAnswers(prev => ({ ...prev, [category]: value }));
+    setAnswers(prev => {
+      const updated = { ...prev, [category]: value };
+      // Update live answers in backend
+      if (roomId && playerName) {
+        apiCall('stopcomplete-rooms', {
+          action: 'updateAnswers',
+          roomId,
+          playerName,
+          answers: updated
+        });
+      }
+      return updated;
+    });
   };
 
   const handleFinish = async () => {
@@ -898,10 +911,10 @@ const StopComplete: React.FC = () => {
               onClick={startGame}
               disabled={isLoading || room.isGameStarted}
               className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+          >
               {isLoading ? 'Starting...' : 'Start Game'}
-            </button>
-          )}
+          </button>
+        )}
 
               {isHost && room && room.isGameStarted && room.isGameFinished && (
                 <button
@@ -931,7 +944,7 @@ const StopComplete: React.FC = () => {
                     placeholder={CATEGORY_LABELS[category]}
                     value={answers[category as keyof GameAnswer]}
                     onChange={(e) => handleAnswerChange(category as keyof GameAnswer, e.target.value)}
-                    className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={room?.isGameFinished || isPlayerFinished || false}
                   />
                 ))}
@@ -949,43 +962,40 @@ const StopComplete: React.FC = () => {
         )}
 
           {room?.isGameFinished && (
-  <div className="mt-8 space-y-6">
-    <h2 className="text-2xl font-bold text-center mb-6">Results</h2>
-    <div className="space-y-4">
+          <div className="mt-8 space-y-6">
+            <h2 className="text-2xl font-bold text-center mb-6">Results</h2>
+            <div className="space-y-4">
       {room.players.map((playerName, index) => {
+        const answers: any = room.liveAnswers && room.liveAnswers[playerName] ? room.liveAnswers[playerName] : {};
         const player = (room.finishedPlayers || []).find(p => p.player === playerName);
         return (
           <div key={playerName} className="bg-gray-800/30 p-4 rounded-lg">
-            <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <span className="font-semibold">{playerName}</span>
                 {index === 0 && <span className="px-2 py-1 text-sm bg-yellow-500/50 rounded-full">🥇</span>}
                 {index === 1 && <span className="px-2 py-1 text-sm bg-gray-400/50 rounded-full">🥈</span>}
                 {index === 2 && <span className="px-2 py-1 text-sm bg-orange-500/50 rounded-full">🥉</span>}
-              </div>
+                  </div>
               <div className="text-right">
                 <div className="font-bold text-lg">{player ? player.score : 0} pts</div>
                 <div className="text-sm text-gray-400">{player ? player.uniqueAnswers : 0} unique</div>
-              </div>
-            </div>
+                    </div>
+                  </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
               {room.categories.map(category => (
                 <div key={category}>
                   <span className="text-gray-400">{CATEGORY_LABELS[category]}:</span>
-                  <p className="font-medium">
-                    {player && typeof player.answers === 'object' && player.answers !== null && category in player.answers
-                      ? (player.answers as any)[category]?.trim() || '--'
-                      : '--'}
-                  </p>
+                  <p className="font-medium">{answers[category]?.trim() || '--'}</p>
                 </div>
               ))}
             </div>
           </div>
         );
       })}
-    </div>
-  </div>
-)}
+            </div>
+          </div>
+        )}
         </div>
       </div>
       <Footer />

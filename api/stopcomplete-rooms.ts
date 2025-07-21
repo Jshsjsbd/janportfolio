@@ -36,6 +36,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return await resetGame(data, res);
         case 'leave':
           return await leaveRoom(data, res);
+        case 'updateAnswers':
+          return await updateAnswers(data, res);
         default:
           return res.status(400).json({ error: 'Invalid action' });
       }
@@ -80,7 +82,9 @@ async function createRoom(data: any, res: VercelResponse) {
     timeLimit: timeLimit || 300,
     categories,
     createdAt: Date.now(),
-    lastActivity: Date.now()
+    lastActivity: Date.now(),
+    isGameFinished: false,
+    liveAnswers: { [playerName]: {} }
   };
 
   await set(roomRef, room);
@@ -122,9 +126,11 @@ async function joinRoom(data: any, res: VercelResponse) {
 
   // Add player to room
   const updatedPlayers = [...room.players, playerName];
+  const updatedLiveAnswers = { ...room.liveAnswers, [playerName]: {} };
   await update(roomRef, {
     players: updatedPlayers,
-    lastActivity: Date.now()
+    lastActivity: Date.now(),
+    liveAnswers: updatedLiveAnswers
   });
 
   return res.status(200).json({ 
@@ -312,11 +318,14 @@ async function leaveRoom(data: any, res: VercelResponse) {
     // Update room with new host if needed
     const newHost = room.host === playerName ? updatedPlayers[0] : room.host;
     
+    const updatedLiveAnswers = { ...room.liveAnswers };
+    delete updatedLiveAnswers[playerName];
     await update(roomRef, {
       host: newHost,
       players: updatedPlayers,
       finishedPlayers: updatedFinishedPlayers,
-      lastActivity: Date.now()
+      lastActivity: Date.now(),
+      liveAnswers: updatedLiveAnswers
     });
   }
 
@@ -354,6 +363,19 @@ async function updatePlayerStats(playerName: string, score: number) {
   };
 
   await set(statsRef, newStats);
+}
+
+async function updateAnswers(data: any, res: VercelResponse) {
+  const { roomId, playerName, answers } = data;
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
+  const roomSnapshot = await get(roomRef);
+  if (!roomSnapshot.exists()) {
+    return res.status(404).json({ error: 'Room not found' });
+  }
+  const room = roomSnapshot.val();
+  const liveAnswers = { ...room.liveAnswers, [playerName]: answers };
+  await update(roomRef, { liveAnswers, lastActivity: Date.now() });
+  return res.status(200).json({ success: true });
 }
 
 function getCategoriesForMode(mode: string) {
