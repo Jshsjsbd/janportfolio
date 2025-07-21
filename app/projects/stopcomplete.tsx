@@ -115,6 +115,7 @@ const StopComplete: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]);
+  const [animatedLetter, setAnimatedLetter] = useState<string>('');
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
@@ -419,13 +420,13 @@ const StopComplete: React.FC = () => {
     }
     
     setIsSelecting(true);
-    setSelectedLetter(''); // Start with empty letter
+    setAnimatedLetter(''); // Start with empty letter for animation
     playSound(440);
 
     let count = 0;
     animationRef.current = setInterval(() => {
       const randomLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-      setSelectedLetter(randomLetter);
+      setAnimatedLetter(randomLetter);
       count++;
 
       if (count > 20) {
@@ -435,7 +436,8 @@ const StopComplete: React.FC = () => {
           animationRef.current = null;
         }
         setIsSelecting(false);
-        setSelectedLetter(letter);
+        setAnimatedLetter('');
+        setSelectedLetter(letter); // Set the real letter at the end
         
         // Force a re-render to ensure the game state updates
         setTimeout(() => {
@@ -960,7 +962,7 @@ const StopComplete: React.FC = () => {
         {isSelecting && (
           <div className="text-center py-10">
               <div className="text-8xl font-bold animate-pulse bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-              {selectedLetter}
+              {animatedLetter}
               </div>
               <div className="text-xl mt-4 text-gray-300">Selecting letter...</div>
               <div className="text-sm text-gray-400 mt-2">Debug: isSelecting={isSelecting.toString()}</div>
