@@ -123,6 +123,7 @@ const StopComplete: React.FC = () => {
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const animationRef = useRef<NodeJS.Timeout | null>(null);
   const animationHandledRef = useRef<boolean>(false);
+  const animationRunningRef = useRef(false);
   const previousRoomRef = useRef<Room | null>(null);
 
   // Initialize audio context
@@ -404,52 +405,32 @@ const StopComplete: React.FC = () => {
   };
 
   const handleLetterSelection = (letter: string) => {
-    console.log('[handleLetterSelection] called with letter:', letter, {
-      isSelecting,
-      letterAnimationHandled,
-      animationHandled: animationHandledRef.current
-    });
-    console.log('Starting letter animation for:', letter);
-    
-    // Prevent multiple animations from running simultaneously
-    if (isSelecting || animationRef.current) {
-      console.log('Animation already running, skipping...');
-      return;
-    }
-    
-    // Clear any existing animation
-    if (animationRef.current) {
-      clearInterval(animationRef.current);
-    }
-    
+    if (animationRunningRef.current) return; // Prevent double animation
+    animationRunningRef.current = true;
+  
+    console.log('[handleLetterSelection] called with letter:', letter);
     setIsSelecting(true);
-    setAnimatedLetter(''); // Start with empty letter for animation
+    setAnimatedLetter('');
     playSound(440);
-
+  
     let count = 0;
     animationRef.current = setInterval(() => {
       const randomLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
       setAnimatedLetter(randomLetter);
       count++;
-
+  
       if (count > 20) {
-        console.log('Letter animation finished, final letter:', letter);
-        if (animationRef.current) {
-          clearInterval(animationRef.current);
-          animationRef.current = null;
-        }
+        clearInterval(animationRef.current!);
+        animationRef.current = null;
+        animationRunningRef.current = false;
         setIsSelecting(false);
         setAnimatedLetter('');
-        setSelectedLetter(letter); // Set the real letter at the end
-        
-        // Force a re-render to ensure the game state updates
-        setTimeout(() => {
-          console.log('Game should now show inputs with letter:', letter);
-          console.log('isSelecting should be false, current state:', isSelecting);
-        }, 100);
+        setSelectedLetter(letter);
+        console.log('Letter animation finished, final letter:', letter);
       }
     }, 100);
   };
+  
 
   const playSound = (frequency: number, duration: number = 200) => {
     if (!audioContext.current) return;
