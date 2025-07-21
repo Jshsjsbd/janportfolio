@@ -297,7 +297,6 @@ const StopComplete: React.FC = () => {
       animationHandledRef.current = true;
       handleLetterSelection(room.selectedLetter);
       setShouldAnimateLetter(false);
-      setIsSelecting(false);
     }
   }, [room, isSelecting, letterAnimationHandled]);
 
