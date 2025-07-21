@@ -290,8 +290,7 @@ const StopComplete: React.FC = () => {
       room.selectedLetter &&
       !isSelecting &&
       !letterAnimationHandled &&
-      !animationHandledRef.current &&
-      shouldAnimateLetter
+      !animationHandledRef.current
     ) {
       console.log('[useEffect Animation Trigger]');
       setLetterAnimationHandled(true);
@@ -299,7 +298,7 @@ const StopComplete: React.FC = () => {
       handleLetterSelection(room.selectedLetter);
       setShouldAnimateLetter(false);
     }
-  }, [room, isSelecting, letterAnimationHandled, shouldAnimateLetter]);
+  }, [room, isSelecting, letterAnimationHandled]);
 
   const getCategoriesForMode = (mode: string) => {
     switch (mode) {
