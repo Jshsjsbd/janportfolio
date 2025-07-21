@@ -903,7 +903,7 @@ const StopComplete: React.FC = () => {
             </button>
           )}
 
-              {isHost && room && room.isGameStarted && (room.finishedPlayers ? room.finishedPlayers.length : 0) === (room.players ? room.players.length : 0) && (
+              {isHost && room && room.isGameFinished && (
                 <button
                   onClick={resetGame}
                   disabled={false}

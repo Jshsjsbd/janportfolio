@@ -213,10 +213,11 @@ async function finishGame(data: any, res: VercelResponse) {
   };
 
   const updatedFinishedPlayers = [...(room.finishedPlayers || []), playerAnswer];
+  const isGameFinished = updatedFinishedPlayers.length === room.players.length;
   await update(roomRef, {
     finishedPlayers: updatedFinishedPlayers,
     lastActivity: Date.now(),
-    isGameFinished: true
+    isGameFinished
   });
 
   // Update player stats
