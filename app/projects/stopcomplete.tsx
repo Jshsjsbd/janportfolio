@@ -165,7 +165,7 @@ const StopComplete: React.FC = () => {
 
   // Real-time updates with polling (since Firebase requires authentication)
   useEffect(() => {
-    if (roomId) {
+    if (roomId && room) {
       setupRealTimeUpdates();
     }
 
@@ -178,7 +178,7 @@ const StopComplete: React.FC = () => {
         clearInterval(animationRef.current);
       }
     };
-  }, [roomId]);
+  }, [roomId, room]);
 
   // Handle automatic room leaving when user reloads or leaves the site
   useEffect(() => {
@@ -484,7 +484,7 @@ const StopComplete: React.FC = () => {
 
       if (result && typeof result === 'object' && 'room' in result && 'roomId' in result) {
         setRoom(result.room);
-        setRoomId(result.roomId as string);
+        setTimeout(() => setRoomId(result.roomId as string), 0); // ensure setRoom runs first
         setIsHost(true);
         playSound(440);
       } else {

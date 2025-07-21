@@ -303,8 +303,8 @@ async function leaveRoom(data: any, res: VercelResponse) {
   const updatedPlayers = room.players.filter((p: string) => p !== playerName);
   const updatedFinishedPlayers = (room.finishedPlayers || []).filter((p: any) => p.player !== playerName);
 
-  if (updatedPlayers.length === 0) {
-    // Delete room if no players left
+  if (updatedPlayers.length === 0 && (room.finishedPlayers || []).length === 0) {
+    console.log(`[leaveRoom] Deleting room ${roomId} because no players and no finished players remain.`);
     await remove(roomRef);
   } else {
     // Update room with new host if needed
