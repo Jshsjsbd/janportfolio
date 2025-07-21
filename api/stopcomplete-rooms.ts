@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-// @ts-ignore
-import { db } from './firebase.js';
+import { db } from './firebase';
 import { ref, set, get, push, update, remove, onValue, off } from 'firebase/database';
+
+// Get the secret from environment variable
+const secret = process.env.FIREBASE_SECRET || 'a7x92kd';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
@@ -61,7 +63,7 @@ async function createRoom(data: any, res: VercelResponse) {
   }
 
   const roomId = Math.random().toString(36).substr(2, 9);
-  const roomRef = ref(db, `stopcomplete/rooms/${roomId}`);
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
 
   const categories = getCategoriesForMode(gameMode || 'medium');
   
@@ -95,7 +97,7 @@ async function joinRoom(data: any, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing fields' });
   }
 
-  const roomRef = ref(db, `stopcomplete/rooms/${roomId}`);
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
   const roomSnapshot = await get(roomRef);
 
   if (!roomSnapshot.exists()) {
@@ -132,7 +134,7 @@ async function joinRoom(data: any, res: VercelResponse) {
 async function startGame(data: any, res: VercelResponse) {
   const { roomId, playerName } = data;
 
-  const roomRef = ref(db, `stopcomplete/rooms/${roomId}`);
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
   const roomSnapshot = await get(roomRef);
 
   if (!roomSnapshot.exists()) {
@@ -169,7 +171,7 @@ async function startGame(data: any, res: VercelResponse) {
 async function finishGame(data: any, res: VercelResponse) {
   const { roomId, playerName, answers } = data;
 
-  const roomRef = ref(db, `stopcomplete/rooms/${roomId}`);
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
   const roomSnapshot = await get(roomRef);
 
   if (!roomSnapshot.exists()) {
@@ -209,7 +211,6 @@ async function finishGame(data: any, res: VercelResponse) {
   };
 
   const updatedFinishedPlayers = [...room.finishedPlayers, playerAnswer];
-
   await update(roomRef, {
     finishedPlayers: updatedFinishedPlayers,
     lastActivity: Date.now()
@@ -220,7 +221,7 @@ async function finishGame(data: any, res: VercelResponse) {
 
   return res.status(200).json({ 
     success: true, 
-    score,
+    score, 
     uniqueAnswers,
     finishTime: Date.now()
   });
@@ -229,7 +230,7 @@ async function finishGame(data: any, res: VercelResponse) {
 async function kickPlayer(data: any, res: VercelResponse) {
   const { roomId, playerName, playerToKick } = data;
 
-  const roomRef = ref(db, `stopcomplete/rooms/${roomId}`);
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
   const roomSnapshot = await get(roomRef);
 
   if (!roomSnapshot.exists()) {
@@ -261,7 +262,7 @@ async function kickPlayer(data: any, res: VercelResponse) {
 async function resetGame(data: any, res: VercelResponse) {
   const { roomId, playerName } = data;
 
-  const roomRef = ref(db, `stopcomplete/rooms/${roomId}`);
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
   const roomSnapshot = await get(roomRef);
 
   if (!roomSnapshot.exists()) {
@@ -288,7 +289,7 @@ async function resetGame(data: any, res: VercelResponse) {
 async function leaveRoom(data: any, res: VercelResponse) {
   const { roomId, playerName } = data;
 
-  const roomRef = ref(db, `stopcomplete/rooms/${roomId}`);
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
   const roomSnapshot = await get(roomRef);
 
   if (!roomSnapshot.exists()) {
@@ -296,6 +297,7 @@ async function leaveRoom(data: any, res: VercelResponse) {
   }
 
   const room = roomSnapshot.val();
+
   const updatedPlayers = room.players.filter((p: string) => p !== playerName);
   const updatedFinishedPlayers = room.finishedPlayers.filter((p: any) => p.player !== playerName);
 
@@ -307,9 +309,9 @@ async function leaveRoom(data: any, res: VercelResponse) {
     const newHost = room.host === playerName ? updatedPlayers[0] : room.host;
     
     await update(roomRef, {
+      host: newHost,
       players: updatedPlayers,
       finishedPlayers: updatedFinishedPlayers,
-      host: newHost,
       lastActivity: Date.now()
     });
   }
@@ -318,22 +320,21 @@ async function leaveRoom(data: any, res: VercelResponse) {
 }
 
 async function getRoom(roomId: string, res: VercelResponse) {
-  const roomRef = ref(db, `stopcomplete/rooms/${roomId}`);
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
   const roomSnapshot = await get(roomRef);
 
   if (!roomSnapshot.exists()) {
     return res.status(404).json({ error: 'Room not found' });
   }
 
-  const room = roomSnapshot.val();
-  return res.status(200).json({ room });
+  return res.status(200).json({ room: roomSnapshot.val() });
 }
 
 async function updatePlayerStats(playerName: string, score: number) {
-  const statsRef = ref(db, `stopcomplete/stats/${playerName.replace(/[.#$[\]]/g, '_')}`);
+  const statsRef = ref(db, `secure_beacons/${secret}/stats/${playerName.replace(/[.#$[\]]/g, '_')}`);
   const statsSnapshot = await get(statsRef);
 
-  let stats = statsSnapshot.exists() ? statsSnapshot.val() : {
+  const currentStats = statsSnapshot.exists() ? statsSnapshot.val() : {
     totalGames: 0,
     wins: 0,
     averageScore: 0,
@@ -341,11 +342,14 @@ async function updatePlayerStats(playerName: string, score: number) {
     fastestFinish: 0
   };
 
-  stats.totalGames += 1;
-  stats.bestScore = Math.max(stats.bestScore, score);
-  stats.averageScore = (stats.averageScore * (stats.totalGames - 1) + score) / stats.totalGames;
+  const newStats = {
+    ...currentStats,
+    totalGames: currentStats.totalGames + 1,
+    bestScore: Math.max(currentStats.bestScore, score),
+    averageScore: (currentStats.averageScore * currentStats.totalGames + score) / (currentStats.totalGames + 1)
+  };
 
-  await set(statsRef, stats);
+  await set(statsRef, newStats);
 }
 
 function getCategoriesForMode(mode: string) {
