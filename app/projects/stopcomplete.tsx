@@ -57,6 +57,7 @@ interface Room {
   categories: string[];
   createdAt: number;
   lastActivity: number;
+  isGameFinished: boolean; // Added this field
 }
 
 interface GameStats {
@@ -677,7 +678,7 @@ const StopComplete: React.FC = () => {
   };
 
   // 1. Add a helper to check if the game is finished for everyone (all players in finishedPlayers):
-  const isGameFinished = room && room.finishedPlayers && room.players && room.finishedPlayers.length === room.players.length;
+  const isGameFinished = room && room.isGameFinished;
 
   if (!room) {
     return (
@@ -931,14 +932,14 @@ const StopComplete: React.FC = () => {
                     value={answers[category as keyof GameAnswer]}
                     onChange={(e) => handleAnswerChange(category as keyof GameAnswer, e.target.value)}
                     className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isPlayerFinished || isGameFinished || false}
+                    disabled={room?.isGameFinished || isPlayerFinished || false}
                   />
                 ))}
               </div>
-            {!isPlayerFinished && !isGameFinished && (
+            {!room?.isGameFinished && !isPlayerFinished && (
               <button
                 onClick={handleFinish}
-                disabled={isPlayerFinished || isGameFinished || false}
+                disabled={room?.isGameFinished || isPlayerFinished || false}
                 className="w-full mt-6 bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Finish

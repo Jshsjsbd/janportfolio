@@ -215,7 +215,8 @@ async function finishGame(data: any, res: VercelResponse) {
   const updatedFinishedPlayers = [...(room.finishedPlayers || []), playerAnswer];
   await update(roomRef, {
     finishedPlayers: updatedFinishedPlayers,
-    lastActivity: Date.now()
+    lastActivity: Date.now(),
+    isGameFinished: true
   });
 
   // Update player stats
@@ -282,7 +283,8 @@ async function resetGame(data: any, res: VercelResponse) {
     selectedLetter: null,
     finishedPlayers: [],
     gameStartTime: null,
-    lastActivity: Date.now()
+    lastActivity: Date.now(),
+    isGameFinished: false
   });
 
   return res.status(200).json({ success: true });
