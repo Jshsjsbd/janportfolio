@@ -187,7 +187,7 @@ async function finishGame(data: any, res: VercelResponse) {
   }
 
   // Check if player already finished
-  if (room.finishedPlayers.some((p: any) => p.player === playerName)) {
+  if ((room.finishedPlayers || []).some((p: any) => p.player === playerName)) {
     return res.status(409).json({ error: 'Player already finished' });
   }
 
@@ -202,7 +202,7 @@ async function finishGame(data: any, res: VercelResponse) {
   }
 
   // Calculate score
-  const { score, uniqueAnswers } = calculateScore(answers, room.finishedPlayers, playerName);
+  const { score, uniqueAnswers } = calculateScore(answers, (room.finishedPlayers || []), playerName);
 
   const playerAnswer = {
     player: playerName,
@@ -212,7 +212,7 @@ async function finishGame(data: any, res: VercelResponse) {
     uniqueAnswers
   };
 
-  const updatedFinishedPlayers = [...room.finishedPlayers, playerAnswer];
+  const updatedFinishedPlayers = [...(room.finishedPlayers || []), playerAnswer];
   await update(roomRef, {
     finishedPlayers: updatedFinishedPlayers,
     lastActivity: Date.now()
@@ -250,7 +250,7 @@ async function kickPlayer(data: any, res: VercelResponse) {
   }
 
   const updatedPlayers = room.players.filter((p: string) => p !== playerToKick);
-  const updatedFinishedPlayers = room.finishedPlayers.filter((p: any) => p.player !== playerToKick);
+  const updatedFinishedPlayers = (room.finishedPlayers || []).filter((p: any) => p.player !== playerToKick);
 
   await update(roomRef, {
     players: updatedPlayers,
@@ -301,7 +301,7 @@ async function leaveRoom(data: any, res: VercelResponse) {
   const room = roomSnapshot.val();
 
   const updatedPlayers = room.players.filter((p: string) => p !== playerName);
-  const updatedFinishedPlayers = room.finishedPlayers.filter((p: any) => p.player !== playerName);
+  const updatedFinishedPlayers = (room.finishedPlayers || []).filter((p: any) => p.player !== playerName);
 
   if (updatedPlayers.length === 0) {
     // Delete room if no players left
