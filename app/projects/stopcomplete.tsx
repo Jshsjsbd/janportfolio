@@ -670,7 +670,7 @@ const StopComplete: React.FC = () => {
     }
   };
 
-  const isPlayerFinished = (room.finishedPlayers || []).some(p => p.player === playerName) || false;
+  const isPlayerFinished = (room && room.finishedPlayers ? room.finishedPlayers : []).some(p => p.player === playerName) || false;
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -715,7 +715,7 @@ const StopComplete: React.FC = () => {
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+            />
               
               {/* Game Mode Selection */}
               <div className="space-y-2">
@@ -757,47 +757,47 @@ const StopComplete: React.FC = () => {
                 </select>
               </div>
             
-              <div className="border-t pt-4">
-                <h2 className="text-xl font-bold mb-2">Create Room</h2>
-                <input
-                  type="password"
-                  placeholder="Set Room Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
-                />
-                <button
-                  onClick={createRoom}
+            <div className="border-t pt-4">
+              <h2 className="text-xl font-bold mb-2">Create Room</h2>
+              <input
+                type="password"
+                placeholder="Set Room Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+              />
+              <button
+                onClick={createRoom}
                   disabled={isLoading}
                   className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+              >
                   {isLoading ? 'Creating...' : 'Create Room'}
-                </button>
-              </div>
+              </button>
+            </div>
 
-              <div className="border-t pt-4">
-                <h2 className="text-xl font-bold mb-2">Join Room</h2>
-                <input
-                  type="text"
-                  placeholder="Room ID"
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value)}
-                  className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
-                />
-                <input
-                  type="password"
-                  placeholder="Room Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
-                />
-                <button
-                  onClick={joinRoom}
+            <div className="border-t pt-4">
+              <h2 className="text-xl font-bold mb-2">Join Room</h2>
+              <input
+                type="text"
+                placeholder="Room ID"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+                className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+              />
+              <input
+                type="password"
+                placeholder="Room Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+              />
+              <button
+                onClick={joinRoom}
                   disabled={isLoading}
                   className="w-full bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+              >
                   {isLoading ? 'Joining...' : 'Join Room'}
-                </button>
+              </button>
               </div>
             </div>
           </div>
@@ -861,14 +861,14 @@ const StopComplete: React.FC = () => {
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Players List */}
-            <div className="mb-6">
+          <div className="mb-6">
               <h2 className="text-xl font-semibold mb-3">Players ({room.players.length})</h2>
-              <ul className="space-y-2">
-                {room.players.map(player => (
+            <ul className="space-y-2">
+              {room.players.map(player => (
                   <li key={player} className="flex items-center justify-between bg-gray-800/30 p-3 rounded-lg">
                     <div className="flex items-center space-x-2">
-                      <span>{player}</span>
-                      {player === room.host && (
+                  <span>{player}</span>
+                  {player === room.host && (
                         <span className="px-2 py-1 text-sm bg-blue-500/50 rounded-full">Host</span>
                       )}
                       {isPlayerFinished && (
@@ -882,25 +882,25 @@ const StopComplete: React.FC = () => {
                       >
                         Kick
                       </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
 
             {/* Game Controls */}
             <div>
-              {isHost && !room.isGameStarted && (
-                <button
-                  onClick={startGame}
+          {isHost && !room.isGameStarted && (
+            <button
+              onClick={startGame}
                   disabled={isLoading}
                   className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+          >
                   {isLoading ? 'Starting...' : 'Start Game'}
-                </button>
-              )}
+          </button>
+        )}
 
-              {isHost && room.isGameStarted && (room.finishedPlayers || []).length === room.players.length && (
+              {isHost && room && room.isGameStarted && (room.finishedPlayers ? room.finishedPlayers.length : 0) === (room.players ? room.players.length : 0) && (
                 <button
                   onClick={resetGame}
                   disabled={isLoading}
@@ -912,83 +912,83 @@ const StopComplete: React.FC = () => {
             </div>
           </div>
 
-          {isSelecting && (
-            <div className="text-center py-10">
+        {isSelecting && (
+          <div className="text-center py-10">
               <div className="text-8xl font-bold animate-pulse bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-                {selectedLetter}
+              {selectedLetter}
               </div>
               <div className="text-xl mt-4 text-gray-300">Selecting letter...</div>
               <div className="text-sm text-gray-400 mt-2">Debug: isSelecting={isSelecting.toString()}</div>
-            </div>
-          )}
+          </div>
+        )}
 
-          {room.isGameStarted && !isSelecting && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-center mb-6">
-                Letter: <span className="text-blue-400">{selectedLetter}</span>
-              </h2>
+        {room.isGameStarted && !isSelecting && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-center mb-6">
+              Letter: <span className="text-blue-400">{selectedLetter}</span>
+            </h2>
               
               <div className="grid md:grid-cols-2 gap-4">
                 {room.categories.map(category => (
-                  <input
+            <input
                     key={category}
-                    type="text"
+              type="text"
                     placeholder={CATEGORY_LABELS[category]}
                     value={answers[category as keyof GameAnswer]}
                     onChange={(e) => handleAnswerChange(category as keyof GameAnswer, e.target.value)}
-                    className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isPlayerFinished}
-                  />
+              className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isPlayerFinished}
+            />
                 ))}
               </div>
               
-              {!isPlayerFinished && (
-                <button
-                  onClick={handleFinish}
+            {!isPlayerFinished && (
+              <button
+                onClick={handleFinish}
                   disabled={isLoading}
                   className="w-full mt-6 bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+              >
                   {isLoading ? 'Submitting...' : 'Finish'}
-                </button>
-              )}
-            </div>
-          )}
+              </button>
+            )}
+          </div>
+        )}
 
-          {(room.finishedPlayers || []).length > 0 && (
-            <div className="mt-8 space-y-6">
-              <h2 className="text-2xl font-bold text-center mb-6">Results</h2>
-              <div className="space-y-4">
-                {(room.finishedPlayers || [])
+          {(room && room.finishedPlayers ? room.finishedPlayers.length : 0) > 0 && (
+          <div className="mt-8 space-y-6">
+            <h2 className="text-2xl font-bold text-center mb-6">Results</h2>
+            <div className="space-y-4">
+                {(room && room.finishedPlayers ? room.finishedPlayers : [])
                   .sort((a, b) => b.score - a.score)
                   .map((player, index) => (
-                  <div key={player.player} className="bg-gray-800/30 p-4 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
+                <div key={player.player} className="bg-gray-800/30 p-4 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
-                        <span className="font-semibold">{player.player}</span>
+                    <span className="font-semibold">{player.player}</span>
                         {index === 0 && <span className="px-2 py-1 text-sm bg-yellow-500/50 rounded-full">🥇</span>}
                         {index === 1 && <span className="px-2 py-1 text-sm bg-gray-400/50 rounded-full">🥈</span>}
                         {index === 2 && <span className="px-2 py-1 text-sm bg-orange-500/50 rounded-full">🥉</span>}
-                      </div>
+                  </div>
                       <div className="text-right">
                         <div className="font-bold text-lg">{player.score} pts</div>
                         <div className="text-sm text-gray-400">
                           {player.uniqueAnswers} unique
-                        </div>
-                      </div>
+                    </div>
+                    </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                       {room.categories.map(category => (
                         <div key={category}>
                           <span className="text-gray-400">{CATEGORY_LABELS[category]}:</span>
                           <p className="font-medium">{player.answers[category as keyof GameAnswer] || '-'}</p>
-                        </div>
-                      ))}
                     </div>
+                      ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
         </div>
       </div>
       <Footer />
