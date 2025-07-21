@@ -262,6 +262,17 @@ const StopComplete: React.FC = () => {
     console.log('isSelecting state changed to:', isSelecting);
   }, [isSelecting]);
 
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        clearInterval(animationRef.current);
+        animationRef.current = null;
+        animationRunningRef.current = false;
+      }
+    };
+  }, []);
+  
+
   // Reset letterAnimationHandled when game state changes
   useEffect(() => {
     if (room && !room.isGameStarted) {
@@ -405,6 +416,12 @@ const StopComplete: React.FC = () => {
   };
 
   const handleLetterSelection = (letter: string) => {
+    console.log('[ANIMATION STATUS]', {
+      isSelecting,
+      animationRunning: animationRunningRef.current,
+      animationRef: animationRef.current,
+    });
+    
     if (animationRunningRef.current) return; // Prevent double animation
     animationRunningRef.current = true;
   
