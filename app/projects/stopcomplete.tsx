@@ -893,20 +893,20 @@ const StopComplete: React.FC = () => {
           {isHost && !room.isGameStarted && (
             <button
               onClick={startGame}
-                  disabled={isLoading}
-                  className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-                  {isLoading ? 'Starting...' : 'Start Game'}
-          </button>
-        )}
+              disabled={room.isGameStarted}
+              className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {room.isGameStarted ? 'Starting...' : 'Start Game'}
+            </button>
+          )}
 
               {isHost && room && room.isGameStarted && (room.finishedPlayers ? room.finishedPlayers.length : 0) === (room.players ? room.players.length : 0) && (
                 <button
                   onClick={resetGame}
-                  disabled={isLoading}
+                  disabled={false}
                   className="w-full bg-purple-500/80 text-white p-3 rounded-lg font-semibold hover:bg-purple-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? 'Resetting...' : 'New Game'}
+                  New Game
                 </button>
               )}
             </div>
@@ -945,10 +945,10 @@ const StopComplete: React.FC = () => {
             {!isPlayerFinished && (
               <button
                 onClick={handleFinish}
-                  disabled={isLoading}
-                  className="w-full mt-6 bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isPlayerFinished}
+                className="w-full mt-6 bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                  {isLoading ? 'Submitting...' : 'Finish'}
+                Finish
               </button>
             )}
           </div>
