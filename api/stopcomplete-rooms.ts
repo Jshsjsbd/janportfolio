@@ -180,7 +180,7 @@ async function startGame(data: any, res: VercelResponse) {
 }
 
 async function finishGame(data: any, res: VercelResponse) {
-  const { roomId, playerName, answers } = data;
+  const { roomId } = data;
 
   const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
   const roomSnapshot = await get(roomRef);
@@ -195,48 +195,43 @@ async function finishGame(data: any, res: VercelResponse) {
     return res.status(409).json({ error: 'Game not started' });
   }
 
-  // Check if player already finished
-  if ((room.finishedPlayers || []).some((p: any) => p.player === playerName)) {
-    return res.status(409).json({ error: 'Player already finished' });
+  if (room.isGameFinished) {
+    // Already finished, just return the results
+    return res.status(200).json({ success: true, finishedPlayers: room.finishedPlayers } );
   }
 
-  // Validate answers
-  const categories = room.categories;
-  const requiredAnswers = categories.filter((cat: string) => !answers[cat]?.trim());
-  
-  if (requiredAnswers.length > 0) {
-    return res.status(400).json({ 
-      error: `Please fill in all required fields: ${requiredAnswers.map((cat: string) => getCategoryLabel(cat)).join(', ')}` 
-    });
-  }
+  // Gather all answers from liveAnswers
+  const allPlayers = room.players;
+  const allAnswers = allPlayers.map((player: string) => ({
+    player,
+    answers: room.liveAnswers && room.liveAnswers[player] ? room.liveAnswers[player] : {},
+  }));
 
-  // Calculate score
-  const { score, uniqueAnswers } = calculateScore(answers, (room.finishedPlayers || []), playerName);
+  // Calculate scores for all players
+  const finishedPlayers = allAnswers.map((entry: { player: string, answers: any }) => {
+    const { player, answers } = entry;
+    const { score, uniqueAnswers } = calculateScore(answers, allAnswers, player);
+    return {
+      player,
+      answers,
+      finishTime: Date.now(),
+      score,
+      uniqueAnswers
+    };
+  });
 
-  const playerAnswer = {
-    player: playerName,
-    answers,
-    finishTime: Date.now(),
-    score,
-    uniqueAnswers
-  };
-
-  const updatedFinishedPlayers = [...(room.finishedPlayers || []), playerAnswer];
   await update(roomRef, {
-    finishedPlayers: updatedFinishedPlayers,
+    finishedPlayers,
     lastActivity: Date.now(),
     isGameFinished: true
   });
 
-  // Update player stats
-  await updatePlayerStats(playerName, score);
+  // Optionally update player stats for all players
+  for (const p of finishedPlayers) {
+    await updatePlayerStats(p.player, p.score);
+  }
 
-  return res.status(200).json({ 
-    success: true, 
-    score, 
-    uniqueAnswers,
-    finishTime: Date.now()
-  });
+  return res.status(200).json({ success: true, finishedPlayers });
 }
 
 async function kickPlayer(data: any, res: VercelResponse) {
@@ -415,13 +410,12 @@ function calculateScore(playerAnswers: any, allAnswers: any[], currentPlayer: st
   categories.forEach(category => {
     const answer = playerAnswers[category];
     if (answer && answer.trim()) {
-      // Check if this answer is unique
-      const isUnique = !allAnswers.some(otherPlayer => 
-        otherPlayer.player !== currentPlayer && 
-        otherPlayer.answers[category]?.toLowerCase() === answer.toLowerCase()
-      );
-      
-      if (isUnique) {
+      // Check if this answer is unique among all players
+      const count = allAnswers.filter(otherPlayer =>
+        otherPlayer.answers &&
+        otherPlayer.answers[category]?.trim().toLowerCase() === answer.trim().toLowerCase()
+      ).length;
+      if (count === 1) {
         score += 10;
         uniqueAnswers++;
       } else {
@@ -430,13 +424,6 @@ function calculateScore(playerAnswers: any, allAnswers: any[], currentPlayer: st
     }
   });
   
-  // Bonus for finishing first
-  const finishOrder = allAnswers.findIndex(p => p.player === currentPlayer);
-  if (finishOrder === 0) {
-    score += 20;
-  } else if (finishOrder === 1) {
-    score += 10;
-  }
-  
+  // No finish order bonus in this mode
   return { score, uniqueAnswers };
 } 
