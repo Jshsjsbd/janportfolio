@@ -1,3 +1,4 @@
+console.log('Current file path:', import.meta.url);
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 // @ts-ignore
 import { db } from "./firebase.js";

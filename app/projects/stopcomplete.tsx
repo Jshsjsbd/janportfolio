@@ -329,6 +329,7 @@ const StopComplete: React.FC = () => {
     pollingRef.current = setInterval(async () => {
       try {
         const data = await apiCall('stopcomplete-updates', { roomId });
+        console.log('[Polling] Received data:', data);
         
         if ('room' in data && data.room) {
           const updatedRoom = data.room as Room;
@@ -354,7 +355,7 @@ const StopComplete: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error('Error polling for updates:', error);
+        console.error('[Polling] Error:', error);
         setError('Connection lost. Please refresh the page.');
       }
     }, 2000);
