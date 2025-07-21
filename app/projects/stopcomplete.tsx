@@ -272,6 +272,23 @@ const StopComplete: React.FC = () => {
     }
   }, [room?.isGameStarted]);
 
+  // Add this useEffect after room is defined:
+  useEffect(() => {
+    if (
+      room &&
+      room.isGameStarted &&
+      room.selectedLetter &&
+      !isSelecting &&
+      !letterAnimationHandled &&
+      !animationHandledRef.current
+    ) {
+      console.log('[useEffect Animation Trigger]');
+      setLetterAnimationHandled(true);
+      animationHandledRef.current = true;
+      handleLetterSelection(room.selectedLetter);
+    }
+  }, [room, isSelecting, letterAnimationHandled]);
+
   const getCategoriesForMode = (mode: string) => {
     switch (mode) {
       case 'easy': return ['boyName', 'girlName', 'plant', 'fruit', 'country'];
