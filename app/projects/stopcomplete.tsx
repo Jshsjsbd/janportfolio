@@ -903,7 +903,7 @@ const StopComplete: React.FC = () => {
             </button>
           )}
 
-              {isHost && room && room.isGameFinished && (
+              {isHost && room && room.isGameStarted && room.isGameFinished && (
                 <button
                   onClick={resetGame}
                   disabled={false}
@@ -948,41 +948,44 @@ const StopComplete: React.FC = () => {
           </div>
         )}
 
-          {(room && room.finishedPlayers ? room.finishedPlayers.length : 0) > 0 && (
-          <div className="mt-8 space-y-6">
-            <h2 className="text-2xl font-bold text-center mb-6">Results</h2>
-            <div className="space-y-4">
-                {(room && room.finishedPlayers ? room.finishedPlayers : [])
-                  .sort((a, b) => b.score - a.score)
-                  .map((player, index) => (
-                <div key={player.player} className="bg-gray-800/30 p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                    <span className="font-semibold">{player.player}</span>
-                        {index === 0 && <span className="px-2 py-1 text-sm bg-yellow-500/50 rounded-full">🥇</span>}
-                        {index === 1 && <span className="px-2 py-1 text-sm bg-gray-400/50 rounded-full">🥈</span>}
-                        {index === 2 && <span className="px-2 py-1 text-sm bg-orange-500/50 rounded-full">🥉</span>}
-                  </div>
-                      <div className="text-right">
-                        <div className="font-bold text-lg">{player.score} pts</div>
-                        <div className="text-sm text-gray-400">
-                          {player.uniqueAnswers} unique
-                    </div>
-                    </div>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                      {room.categories.map(category => (
-                        <div key={category}>
-                          <span className="text-gray-400">{CATEGORY_LABELS[category]}:</span>
-                          <p className="font-medium">{player.answers[category as keyof GameAnswer]?.trim() ? player.answers[category as keyof GameAnswer] : '--'}</p>
-                    </div>
-                      ))}
-                  </div>
+          {room?.isGameFinished && (
+  <div className="mt-8 space-y-6">
+    <h2 className="text-2xl font-bold text-center mb-6">Results</h2>
+    <div className="space-y-4">
+      {room.players.map((playerName, index) => {
+        const player = (room.finishedPlayers || []).find(p => p.player === playerName);
+        return (
+          <div key={playerName} className="bg-gray-800/30 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <span className="font-semibold">{playerName}</span>
+                {index === 0 && <span className="px-2 py-1 text-sm bg-yellow-500/50 rounded-full">🥇</span>}
+                {index === 1 && <span className="px-2 py-1 text-sm bg-gray-400/50 rounded-full">🥈</span>}
+                {index === 2 && <span className="px-2 py-1 text-sm bg-orange-500/50 rounded-full">🥉</span>}
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-lg">{player ? player.score : 0} pts</div>
+                <div className="text-sm text-gray-400">{player ? player.uniqueAnswers : 0} unique</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+              {room.categories.map(category => (
+                <div key={category}>
+                  <span className="text-gray-400">{CATEGORY_LABELS[category]}:</span>
+                  <p className="font-medium">
+                    {player && typeof player.answers === 'object' && player.answers !== null && category in player.answers
+                      ? (player.answers as any)[category]?.trim() || '--'
+                      : '--'}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
-        )}
+        );
+      })}
+    </div>
+  </div>
+)}
         </div>
       </div>
       <Footer />
