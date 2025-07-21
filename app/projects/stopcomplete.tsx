@@ -87,12 +87,10 @@ const StopComplete: React.FC = () => {
   const [room, setRoom] = useState<Room | null>(null);
   const [isHost, setIsHost] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState<string>('');
-  const [isSelecting, setIsSelecting] = useState(false);
   const [gameMode, setGameMode] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [timeLimit, setTimeLimit] = useState(300);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [showCopied, setShowCopied] = useState(false);
-  const [letterAnimationHandled, setLetterAnimationHandled] = useState(false);
   const [gameStats, setGameStats] = useState<GameStats>({
     totalGames: 0,
     wins: 0,
@@ -115,8 +113,6 @@ const StopComplete: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]);
-  const [animatedLetter, setAnimatedLetter] = useState<string>('');
-  const [shouldAnimateLetter, setShouldAnimateLetter] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
@@ -145,7 +141,7 @@ const StopComplete: React.FC = () => {
 
   // Timer effect
   useEffect(() => {
-    if (room?.isGameStarted && !isSelecting && timeLeft > 0 && room.gameStartTime) {
+    if (room?.isGameStarted && timeLeft > 0 && room.gameStartTime) {
       const elapsed = Math.floor((Date.now() - room.gameStartTime) / 1000);
       const remaining = Math.max(0, timeLimit - elapsed);
       setTimeLeft(remaining);
@@ -165,7 +161,7 @@ const StopComplete: React.FC = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [room?.isGameStarted, isSelecting, timeLimit, room?.gameStartTime]);
+  }, [room?.isGameStarted, timeLimit, room?.gameStartTime]);
 
   // Real-time updates with polling (since Firebase requires authentication)
   useEffect(() => {
@@ -259,8 +255,8 @@ const StopComplete: React.FC = () => {
 
   // Debug effect for isSelecting state
   useEffect(() => {
-    console.log('isSelecting state changed to:', isSelecting);
-  }, [isSelecting]);
+    console.log('isSelecting state changed to:', false);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -276,9 +272,9 @@ const StopComplete: React.FC = () => {
   // Reset letterAnimationHandled when game state changes
   useEffect(() => {
     if (room && !room.isGameStarted) {
-      setLetterAnimationHandled(false);
-      setIsSelecting(false);
-      animationHandledRef.current = false;
+      // setLetterAnimationHandled(false); // Removed
+      // setIsSelecting(false); // Removed
+      // animationHandledRef.current = false; // Removed
       if (animationRef.current) {
         clearInterval(animationRef.current);
         animationRef.current = null;
@@ -289,28 +285,28 @@ const StopComplete: React.FC = () => {
   // Add this useEffect after room is defined:
   useEffect(() => {
     console.log('[Animation useEffect] room:', room, {
-      isSelecting,
-      letterAnimationHandled,
-      animationHandled: animationHandledRef.current,
-      selectedLetter: room && room.selectedLetter,
+      // isSelecting, // Removed
+      // letterAnimationHandled, // Removed
+      // animationHandled: animationHandledRef.current, // Removed
+      // selectedLetter: room && room.selectedLetter, // Removed
       isGameStarted: room && room.isGameStarted,
-      shouldAnimateLetter
+      // shouldAnimateLetter // Removed
     });
     if (
       room &&
       room.isGameStarted &&
-      room.selectedLetter &&
-      !isSelecting &&
-      !letterAnimationHandled &&
-      !animationHandledRef.current
+      room.selectedLetter
+      // !isSelecting && // Removed
+      // !letterAnimationHandled && // Removed
+      // !animationHandledRef.current // Removed
     ) {
       console.log('[useEffect Animation Trigger]');
-      setLetterAnimationHandled(true);
-      animationHandledRef.current = true;
-      handleLetterSelection(room.selectedLetter);
-      setShouldAnimateLetter(false);
+      // setLetterAnimationHandled(true); // Removed
+      // animationHandledRef.current = true; // Removed
+      // handleLetterSelection(room.selectedLetter); // Removed
+      // setShouldAnimateLetter(false); // Removed
     }
-  }, [room, isSelecting, letterAnimationHandled]);
+  }, [room, room?.isGameStarted, room?.selectedLetter]);
 
   const getCategoriesForMode = (mode: string) => {
     switch (mode) {
@@ -383,9 +379,9 @@ const StopComplete: React.FC = () => {
           console.log('[Animation Check]', {
             isGameStarted: updatedRoom.isGameStarted,
             selectedLetter: updatedRoom.selectedLetter,
-            isSelecting,
-            letterAnimationHandled,
-            animationHandled: animationHandledRef.current,
+            // isSelecting, // Removed
+            // letterAnimationHandled, // Removed
+            // animationHandled: animationHandledRef.current, // Removed
             previousRoomExists: !!previousRoom,
             previousRoomIsGameStarted: previousRoom ? previousRoom.isGameStarted : undefined
           });
@@ -395,16 +391,16 @@ const StopComplete: React.FC = () => {
           if (
             updatedRoom.isGameStarted &&
             updatedRoom.selectedLetter &&
-            !isSelecting &&
-            !letterAnimationHandled &&
-            !animationHandledRef.current &&
+            // !isSelecting && // Removed
+            // !letterAnimationHandled && // Removed
+            // !animationHandledRef.current && // Removed
             previousRoom &&
             !previousRoom.isGameStarted
           ) {
             console.log('Triggering letter animation - game just started');
-            setLetterAnimationHandled(true);
-            animationHandledRef.current = true;
-            handleLetterSelection(updatedRoom.selectedLetter);
+            // setLetterAnimationHandled(true); // Removed
+            // animationHandledRef.current = true; // Removed
+            // handleLetterSelection(updatedRoom.selectedLetter); // Removed
           }
           previousRoomRef.current = updatedRoom;
         }
@@ -417,7 +413,7 @@ const StopComplete: React.FC = () => {
 
   const handleLetterSelection = (letter: string) => {
     console.log('[ANIMATION STATUS]', {
-      isSelecting,
+      // isSelecting, // Removed
       animationRunning: animationRunningRef.current,
       animationRef: animationRef.current,
     });
@@ -426,23 +422,23 @@ const StopComplete: React.FC = () => {
     animationRunningRef.current = true;
   
     console.log('[handleLetterSelection] called with letter:', letter);
-    setIsSelecting(true);
-    setAnimatedLetter('');
+    // setIsSelecting(true); // Removed
+    // setAnimatedLetter(''); // Removed
     playSound(440);
   
     let count = 0;
     animationRef.current = setInterval(() => {
       const randomLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-      setAnimatedLetter(randomLetter);
+      // setAnimatedLetter(randomLetter); // Removed
       count++;
   
       if (count > 20) {
         clearInterval(animationRef.current!);
         animationRef.current = null;
         animationRunningRef.current = false;
-        setIsSelecting(false);
-        setAnimatedLetter('');
-        setSelectedLetter(letter);
+        // setIsSelecting(false); // Removed
+        // setAnimatedLetter(''); // Removed
+        // setSelectedLetter(letter); // Removed
         console.log('Letter animation finished, final letter:', letter);
       }
     }, 100);
@@ -594,7 +590,6 @@ const StopComplete: React.FC = () => {
 
   const startGame = async () => {
     if (!isHost || !room) return;
-    setShouldAnimateLetter(true);
     try {
       await apiCall('stopcomplete-rooms', {
         action: 'start',
@@ -662,12 +657,12 @@ const StopComplete: React.FC = () => {
         sport: ''
       });
       setTimeLeft(timeLimit);
-      setIsSelecting(false);
+      // setIsSelecting(false); // Removed
       setSelectedLetter('');
-      setLetterAnimationHandled(false);
-      animationHandledRef.current = false;
+      // setLetterAnimationHandled(false); // Removed
+      // animationHandledRef.current = false; // Removed
       previousRoomRef.current = null;
-      setShouldAnimateLetter(false);
+      // setShouldAnimateLetter(false); // Removed
       
       // Clear any running animation
       if (animationRef.current) {
@@ -705,10 +700,10 @@ const StopComplete: React.FC = () => {
         sport: ''
       });
       setSelectedLetter('');
-      setLetterAnimationHandled(false);
-      animationHandledRef.current = false;
+      // setLetterAnimationHandled(false); // Removed
+      // animationHandledRef.current = false; // Removed
       previousRoomRef.current = null;
-      setShouldAnimateLetter(false);
+      // setShouldAnimateLetter(false); // Removed
       
       // Clear any running animation
       if (animationRef.current) {
@@ -901,7 +896,7 @@ const StopComplete: React.FC = () => {
           </div>
 
           {/* Timer */}
-          {room.isGameStarted && !isSelecting && timeLimit > 0 && (
+          {room.isGameStarted && timeLimit > 0 && (
             <div className="mb-4 text-center">
               <div className={`text-2xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-blue-400'}`}>
                 {formatTime(timeLeft)}
@@ -962,20 +957,12 @@ const StopComplete: React.FC = () => {
             </div>
           </div>
 
-        {isSelecting && (
-          <div className="text-center py-10">
-              <div className="text-8xl font-bold animate-pulse bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-              {animatedLetter}
-              </div>
-              <div className="text-xl mt-4 text-gray-300">Selecting letter...</div>
-              <div className="text-sm text-gray-400 mt-2">Debug: isSelecting={isSelecting.toString()}</div>
-          </div>
-        )}
+        {/* Removed animation UI */}
 
-        {room.isGameStarted && !isSelecting && (
+        {room.isGameStarted && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-center mb-6">
-              Letter: <span className="text-blue-400">{selectedLetter}</span>
+              Letter: <span className="text-blue-400">{room.selectedLetter}</span>
             </h2>
               
               <div className="grid md:grid-cols-2 gap-4">
