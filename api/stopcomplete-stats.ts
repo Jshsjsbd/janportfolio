@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-const { db } = require('./firebase.js');
+import { db } from './firebase';
 import { ref, get, set } from 'firebase/database';
 
 // Get the secret from environment variable
