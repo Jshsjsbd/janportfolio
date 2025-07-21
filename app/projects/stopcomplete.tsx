@@ -116,6 +116,7 @@ const StopComplete: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]);
   const [animatedLetter, setAnimatedLetter] = useState<string>('');
+  const [shouldAnimateLetter, setShouldAnimateLetter] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
@@ -280,7 +281,8 @@ const StopComplete: React.FC = () => {
       letterAnimationHandled,
       animationHandled: animationHandledRef.current,
       selectedLetter: room && room.selectedLetter,
-      isGameStarted: room && room.isGameStarted
+      isGameStarted: room && room.isGameStarted,
+      shouldAnimateLetter
     });
     if (
       room &&
@@ -288,14 +290,16 @@ const StopComplete: React.FC = () => {
       room.selectedLetter &&
       !isSelecting &&
       !letterAnimationHandled &&
-      !animationHandledRef.current
+      !animationHandledRef.current &&
+      shouldAnimateLetter
     ) {
       console.log('[useEffect Animation Trigger]');
       setLetterAnimationHandled(true);
       animationHandledRef.current = true;
       handleLetterSelection(room.selectedLetter);
+      setShouldAnimateLetter(false);
     }
-  }, [room, isSelecting, letterAnimationHandled]);
+  }, [room, isSelecting, letterAnimationHandled, shouldAnimateLetter]);
 
   const getCategoriesForMode = (mode: string) => {
     switch (mode) {
@@ -593,7 +597,7 @@ const StopComplete: React.FC = () => {
 
   const startGame = async () => {
     if (!isHost || !room) return;
-
+    setShouldAnimateLetter(true);
     try {
       await apiCall('stopcomplete-rooms', {
         action: 'start',
@@ -666,6 +670,7 @@ const StopComplete: React.FC = () => {
       setLetterAnimationHandled(false);
       animationHandledRef.current = false;
       previousRoomRef.current = null;
+      setShouldAnimateLetter(false);
       
       // Clear any running animation
       if (animationRef.current) {
@@ -706,6 +711,7 @@ const StopComplete: React.FC = () => {
       setLetterAnimationHandled(false);
       animationHandledRef.current = false;
       previousRoomRef.current = null;
+      setShouldAnimateLetter(false);
       
       // Clear any running animation
       if (animationRef.current) {
