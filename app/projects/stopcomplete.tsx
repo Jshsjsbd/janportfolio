@@ -274,6 +274,13 @@ const StopComplete: React.FC = () => {
 
   // Add this useEffect after room is defined:
   useEffect(() => {
+    console.log('[Animation useEffect] room:', room, {
+      isSelecting,
+      letterAnimationHandled,
+      animationHandled: animationHandledRef.current,
+      selectedLetter: room && room.selectedLetter,
+      isGameStarted: room && room.isGameStarted
+    });
     if (
       room &&
       room.isGameStarted &&
@@ -393,6 +400,11 @@ const StopComplete: React.FC = () => {
   };
 
   const handleLetterSelection = (letter: string) => {
+    console.log('[handleLetterSelection] called with letter:', letter, {
+      isSelecting,
+      letterAnimationHandled,
+      animationHandled: animationHandledRef.current
+    });
     console.log('Starting letter animation for:', letter);
     
     // Prevent multiple animations from running simultaneously
