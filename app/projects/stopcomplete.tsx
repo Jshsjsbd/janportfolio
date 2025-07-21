@@ -121,6 +121,7 @@ const StopComplete: React.FC = () => {
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const animationRef = useRef<NodeJS.Timeout | null>(null);
   const animationHandledRef = useRef<boolean>(false);
+  const previousRoomRef = useRef<Room | null>(null);
 
   // Initialize audio context
   useEffect(() => {
@@ -333,26 +334,39 @@ const StopComplete: React.FC = () => {
         
         if ('room' in data && data.room) {
           const updatedRoom = data.room as Room;
-          const previousRoom = room;
+          const previousRoom = previousRoomRef.current;
           
           setRoom(updatedRoom);
           setIsHost(updatedRoom.host === playerName);
           
+          // Debug log for animation trigger
+          console.log('[Animation Check]', {
+            isGameStarted: updatedRoom.isGameStarted,
+            selectedLetter: updatedRoom.selectedLetter,
+            isSelecting,
+            letterAnimationHandled,
+            animationHandled: animationHandledRef.current,
+            previousRoomExists: !!previousRoom,
+            previousRoomIsGameStarted: previousRoom ? previousRoom.isGameStarted : undefined
+          });
           // Handle letter selection animation only when game first starts
           // AND we haven't handled it yet AND we're not currently selecting
           // AND the game just transitioned from not started to started
-          if (updatedRoom.isGameStarted && 
-              updatedRoom.selectedLetter && 
-              !isSelecting && 
-              !letterAnimationHandled &&
-              !animationHandledRef.current &&
-              previousRoom && 
-              !previousRoom.isGameStarted) {
+          if (
+            updatedRoom.isGameStarted &&
+            updatedRoom.selectedLetter &&
+            !isSelecting &&
+            !letterAnimationHandled &&
+            !animationHandledRef.current &&
+            previousRoom &&
+            !previousRoom.isGameStarted
+          ) {
             console.log('Triggering letter animation - game just started');
             setLetterAnimationHandled(true);
             animationHandledRef.current = true;
             handleLetterSelection(updatedRoom.selectedLetter);
           }
+          previousRoomRef.current = updatedRoom;
         }
       } catch (error) {
         console.error('[Polling] Error:', error);
@@ -620,6 +634,7 @@ const StopComplete: React.FC = () => {
       setSelectedLetter('');
       setLetterAnimationHandled(false);
       animationHandledRef.current = false;
+      previousRoomRef.current = null;
       
       // Clear any running animation
       if (animationRef.current) {
@@ -659,6 +674,7 @@ const StopComplete: React.FC = () => {
       setSelectedLetter('');
       setLetterAnimationHandled(false);
       animationHandledRef.current = false;
+      previousRoomRef.current = null;
       
       // Clear any running animation
       if (animationRef.current) {
