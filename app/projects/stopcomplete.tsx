@@ -4,6 +4,24 @@ import Footer from "../components/Footer";
 import "../app.css";
 import { useState, useEffect, useRef } from 'react';
 
+// Add notification animation styles
+const notificationStyles = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = notificationStyles;
+  document.head.appendChild(style);
+}
+
 interface GameAnswer {
   boyName: string;
   girlName: string;
@@ -74,6 +92,7 @@ const StopComplete: React.FC = () => {
   const [timeLimit, setTimeLimit] = useState(300);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [showCopied, setShowCopied] = useState(false);
+  const [letterAnimationHandled, setLetterAnimationHandled] = useState(false);
   const [gameStats, setGameStats] = useState<GameStats>({
     totalGames: 0,
     wins: 0,
@@ -95,10 +114,13 @@ const StopComplete: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<string[]>([]);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const animationRef = useRef<NodeJS.Timeout | null>(null);
+  const animationHandledRef = useRef<boolean>(false);
 
   // Initialize audio context
   useEffect(() => {
@@ -151,8 +173,102 @@ const StopComplete: React.FC = () => {
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
       }
+      if (animationRef.current) {
+        clearInterval(animationRef.current);
+      }
     };
   }, [roomId]);
+
+  // Handle automatic room leaving when user reloads or leaves the site
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (roomId && playerName) {
+        // Store leave data for cleanup on next page load
+        const leaveData = {
+          roomId,
+          playerName,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('pending_room_leave', JSON.stringify(leaveData));
+        
+        // Note: We can't use async operations in beforeunload
+        // The cleanup will happen on the next page load
+      }
+    };
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'hidden' && roomId && playerName) {
+        // User switched tabs or minimized browser
+        try {
+          await mockApiCall('stopcomplete-rooms', {
+            action: 'leave',
+            roomId,
+            playerName
+          });
+        } catch (error) {
+          console.error('Error leaving room on visibility change:', error);
+        }
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [roomId, playerName]);
+
+  // Check for pending room leaves on component mount
+  useEffect(() => {
+    const pendingLeave = localStorage.getItem('pending_room_leave');
+    if (pendingLeave) {
+      try {
+        const leaveData = JSON.parse(pendingLeave);
+        // Process the pending leave
+        if (leaveData.roomId && leaveData.playerName) {
+          console.log('Processing pending room leave for:', leaveData.playerName);
+          // Clean up the pending leave
+          localStorage.removeItem('pending_room_leave');
+          
+          // Add notification about the leave
+          const notifications = JSON.parse(localStorage.getItem(`room_notifications_${leaveData.roomId}`) || '[]');
+          notifications.push({
+            type: 'player_left',
+            player: leaveData.playerName,
+            timestamp: Date.now(),
+            message: `${leaveData.playerName} left the room (page reload/close)`
+          });
+          localStorage.setItem(`room_notifications_${leaveData.roomId}`, JSON.stringify(notifications));
+        }
+      } catch (error) {
+        console.error('Error parsing pending leave data:', error);
+        localStorage.removeItem('pending_room_leave');
+      }
+    }
+  }, []);
+
+  // Debug effect for isSelecting state
+  useEffect(() => {
+    console.log('isSelecting state changed to:', isSelecting);
+  }, [isSelecting]);
+
+
+  // Reset letterAnimationHandled when game state changes
+  useEffect(() => {
+    if (room && !room.isGameStarted) {
+      setLetterAnimationHandled(false);
+      setIsSelecting(false);
+      animationHandledRef.current = false;
+      if (animationRef.current) {
+        clearInterval(animationRef.current);
+        animationRef.current = null;
+      }
+    }
+  }, [room?.isGameStarted]);
 
   const setupRealTimeUpdates = () => {
     // Clear any existing polling
@@ -163,18 +279,51 @@ const StopComplete: React.FC = () => {
     // Poll for updates every 2 seconds
     pollingRef.current = setInterval(async () => {
       try {
-        const response = await fetch(`/api/stopcomplete-updates?roomId=${roomId}`);
-        const data = await response.json();
+        const data = await mockApiCall('stopcomplete-updates', { roomId });
         
-        if (data.error) {
+        if ('error' in data && typeof data.error === 'string') {
           setError(data.error);
-        } else if (data.room) {
-          const updatedRoom = data.room;
+        } else if ('room' in data && data.room) {
+          const updatedRoom = data.room as Room;
+          const previousRoom = room;
+          
           setRoom(updatedRoom);
           setIsHost(updatedRoom.host === playerName);
           
-          // Handle letter selection animation
-          if (updatedRoom.isGameStarted && updatedRoom.selectedLetter && !isSelecting) {
+          // Check for new notifications
+          const roomNotifications = JSON.parse(localStorage.getItem(`room_notifications_${roomId}`) || '[]');
+          const lastNotificationTime = localStorage.getItem(`last_notification_${roomId}_${playerName}`) || '0';
+          
+          const newNotifications = roomNotifications.filter((n: any) => 
+            n.timestamp > parseInt(lastNotificationTime) && n.player !== playerName
+          );
+          
+          if (newNotifications.length > 0) {
+            // Update last notification time
+            localStorage.setItem(`last_notification_${roomId}_${playerName}`, Date.now().toString());
+            
+            // Add new notifications to state
+            setNotifications(prev => [...prev, ...newNotifications.map((n: any) => n.message)]);
+            
+            // Auto-remove notifications after 5 seconds
+            setTimeout(() => {
+              setNotifications(prev => prev.filter(n => !newNotifications.some((nn: any) => nn.message === n)));
+            }, 5000);
+          }
+          
+          // Handle letter selection animation only when game first starts
+          // AND we haven't handled it yet AND we're not currently selecting
+          // AND the game just transitioned from not started to started
+          if (updatedRoom.isGameStarted && 
+              updatedRoom.selectedLetter && 
+              !isSelecting && 
+              !letterAnimationHandled &&
+              !animationHandledRef.current &&
+              previousRoom && 
+              !previousRoom.isGameStarted) {
+            console.log('Triggering letter animation - game just started');
+            setLetterAnimationHandled(true);
+            animationHandledRef.current = true;
             handleLetterSelection(updatedRoom.selectedLetter);
           }
         }
@@ -186,19 +335,43 @@ const StopComplete: React.FC = () => {
   };
 
   const handleLetterSelection = (letter: string) => {
+    console.log('Starting letter animation for:', letter);
+    
+    // Prevent multiple animations from running simultaneously
+    if (isSelecting || animationRef.current) {
+      console.log('Animation already running, skipping...');
+      return;
+    }
+    
+    // Clear any existing animation
+    if (animationRef.current) {
+      clearInterval(animationRef.current);
+    }
+    
     setIsSelecting(true);
+    setSelectedLetter(''); // Start with empty letter
     playSound(440);
 
     let count = 0;
-    const interval = setInterval(() => {
+    animationRef.current = setInterval(() => {
       const randomLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
       setSelectedLetter(randomLetter);
       count++;
 
       if (count > 20) {
-        clearInterval(interval);
+        console.log('Letter animation finished, final letter:', letter);
+        if (animationRef.current) {
+          clearInterval(animationRef.current);
+          animationRef.current = null;
+        }
         setIsSelecting(false);
         setSelectedLetter(letter);
+        
+        // Force a re-render to ensure the game state updates
+        setTimeout(() => {
+          console.log('Game should now show inputs with letter:', letter);
+          console.log('isSelecting should be false, current state:', isSelecting);
+        }, 100);
       }
     }, 100);
   };
@@ -224,9 +397,8 @@ const StopComplete: React.FC = () => {
 
   const loadPlayerStats = async () => {
     try {
-      const response = await fetch(`/api/stopcomplete-stats?playerName=${encodeURIComponent(playerName)}`);
-      const data = await response.json();
-      if (data.stats) {
+      const data = await mockApiCall('stopcomplete-stats', { playerName });
+      if ('stats' in data) {
         setGameStats(data.stats);
       }
     } catch (error) {
@@ -239,21 +411,9 @@ const StopComplete: React.FC = () => {
     setError(null);
     
     try {
-      const response = await fetch(`/api/${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'API call failed');
-      }
-
-      return result;
+      // For development, use localStorage-based mock API
+      // In production, this would call the Vercel API routes
+      return await mockApiCall(endpoint, data);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
@@ -261,6 +421,390 @@ const StopComplete: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Mock API for development
+  const mockApiCall = async (endpoint: string, data: any) => {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    switch (endpoint) {
+      case 'stopcomplete-rooms':
+        return await handleRoomAction(data);
+      case 'stopcomplete-stats':
+        return await handleStatsAction(data);
+      case 'stopcomplete-updates':
+        return await handleUpdatesAction(data);
+      default:
+        throw new Error('Unknown endpoint');
+    }
+  };
+
+  const handleRoomAction = async (data: any) => {
+    const { action, ...params } = data;
+
+    switch (action) {
+      case 'create':
+        return await createRoomMock(params);
+      case 'join':
+        return await joinRoomMock(params);
+      case 'start':
+        return await startGameMock(params);
+      case 'finish':
+        return await finishGameMock(params);
+      case 'kick':
+        return await kickPlayerMock(params);
+      case 'reset':
+        return await resetGameMock(params);
+      case 'leave':
+        return await leaveRoomMock(params);
+      default:
+        throw new Error('Invalid action');
+    }
+  };
+
+  const createRoomMock = async (data: any) => {
+    const { playerName, password, gameMode, timeLimit } = data;
+    
+    if (!playerName?.trim() || !password?.trim()) {
+      throw new Error('Name and password required');
+    }
+
+    const roomId = Math.random().toString(36).substr(2, 9);
+    const categories = getCategoriesForMode(gameMode || 'medium');
+    
+    const room = {
+      id: roomId,
+      password,
+      host: playerName,
+      players: [playerName],
+      isGameStarted: false,
+      finishedPlayers: [],
+      gameMode: gameMode || 'medium',
+      timeLimit: timeLimit || 300,
+      categories,
+      createdAt: Date.now(),
+      lastActivity: Date.now()
+    };
+
+    // Store in localStorage
+    const rooms = JSON.parse(localStorage.getItem('stopcomplete_rooms') || '{}');
+    rooms[roomId] = room;
+    localStorage.setItem('stopcomplete_rooms', JSON.stringify(rooms));
+
+    return { success: true, roomId, room };
+  };
+
+  const joinRoomMock = async (data: any) => {
+    const { roomId, playerName, password } = data;
+    
+    if (!roomId?.trim() || !playerName?.trim() || !password?.trim()) {
+      throw new Error('Missing fields');
+    }
+
+    const rooms = JSON.parse(localStorage.getItem('stopcomplete_rooms') || '{}');
+    const room = rooms[roomId];
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    if (room.password !== password) {
+      throw new Error('Wrong password');
+    }
+
+    if (room.players.includes(playerName)) {
+      throw new Error('Player already in room');
+    }
+
+    if (room.isGameStarted) {
+      throw new Error('Game already started');
+    }
+
+    // Add player to room
+    room.players.push(playerName);
+    room.lastActivity = Date.now();
+    rooms[roomId] = room;
+    localStorage.setItem('stopcomplete_rooms', JSON.stringify(rooms));
+
+    return { success: true, room };
+  };
+
+  const startGameMock = async (data: any) => {
+    const { roomId, playerName } = data;
+    
+    const rooms = JSON.parse(localStorage.getItem('stopcomplete_rooms') || '{}');
+    const room = rooms[roomId];
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    if (room.host !== playerName) {
+      throw new Error('Only host can start game');
+    }
+
+    if (room.isGameStarted) {
+      throw new Error('Game already started');
+    }
+
+    // Generate random letter
+    const selectedLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+
+    room.isGameStarted = true;
+    room.selectedLetter = selectedLetter;
+    room.gameStartTime = Date.now();
+    room.lastActivity = Date.now();
+    rooms[roomId] = room;
+    localStorage.setItem('stopcomplete_rooms', JSON.stringify(rooms));
+
+    return { success: true, selectedLetter, gameStartTime: Date.now() };
+  };
+
+  const finishGameMock = async (data: any) => {
+    const { roomId, playerName, answers } = data;
+    
+    const rooms = JSON.parse(localStorage.getItem('stopcomplete_rooms') || '{}');
+    const room = rooms[roomId];
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    if (!room.isGameStarted) {
+      throw new Error('Game not started');
+    }
+
+    if (room.finishedPlayers.some((p: any) => p.player === playerName)) {
+      throw new Error('Player already finished');
+    }
+
+    // Validate answers
+    const categories = room.categories;
+    const requiredAnswers = categories.filter((cat: string) => !answers[cat]?.trim());
+    
+    if (requiredAnswers.length > 0) {
+      throw new Error(`Please fill in all required fields: ${requiredAnswers.map((cat: string) => getCategoryLabel(cat)).join(', ')}`);
+    }
+
+    // Calculate score
+    const { score, uniqueAnswers } = calculateScore(answers, room.finishedPlayers, playerName);
+
+    const playerAnswer = {
+      player: playerName,
+      answers,
+      finishTime: Date.now(),
+      score,
+      uniqueAnswers
+    };
+
+    room.finishedPlayers.push(playerAnswer);
+    room.lastActivity = Date.now();
+    rooms[roomId] = room;
+    localStorage.setItem('stopcomplete_rooms', JSON.stringify(rooms));
+
+    // Update player stats
+    updatePlayerStatsMock(playerName, score);
+
+    return { success: true, score, uniqueAnswers, finishTime: Date.now() };
+  };
+
+  const kickPlayerMock = async (data: any) => {
+    const { roomId, playerName, playerToKick } = data;
+    
+    const rooms = JSON.parse(localStorage.getItem('stopcomplete_rooms') || '{}');
+    const room = rooms[roomId];
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    if (room.host !== playerName) {
+      throw new Error('Only host can kick players');
+    }
+
+    if (playerToKick === playerName) {
+      throw new Error('Cannot kick yourself');
+    }
+
+    room.players = room.players.filter((p: string) => p !== playerToKick);
+    room.finishedPlayers = room.finishedPlayers.filter((p: any) => p.player !== playerToKick);
+    room.lastActivity = Date.now();
+    rooms[roomId] = room;
+    localStorage.setItem('stopcomplete_rooms', JSON.stringify(rooms));
+
+    return { success: true };
+  };
+
+  const resetGameMock = async (data: any) => {
+    const { roomId, playerName } = data;
+    
+    const rooms = JSON.parse(localStorage.getItem('stopcomplete_rooms') || '{}');
+    const room = rooms[roomId];
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    if (room.host !== playerName) {
+      throw new Error('Only host can reset game');
+    }
+
+    room.isGameStarted = false;
+    room.selectedLetter = null;
+    room.finishedPlayers = [];
+    room.gameStartTime = null;
+    room.lastActivity = Date.now();
+    rooms[roomId] = room;
+    localStorage.setItem('stopcomplete_rooms', JSON.stringify(rooms));
+
+    return { success: true };
+  };
+
+  const leaveRoomMock = async (data: any) => {
+    const { roomId, playerName } = data;
+    
+    const rooms = JSON.parse(localStorage.getItem('stopcomplete_rooms') || '{}');
+    const room = rooms[roomId];
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    // Add notification about player leaving
+    const notifications = JSON.parse(localStorage.getItem(`room_notifications_${roomId}`) || '[]');
+    notifications.push({
+      type: 'player_left',
+      player: playerName,
+      timestamp: Date.now(),
+      message: `${playerName} left the room`
+    });
+    localStorage.setItem(`room_notifications_${roomId}`, JSON.stringify(notifications));
+
+    room.players = room.players.filter((p: string) => p !== playerName);
+    room.finishedPlayers = room.finishedPlayers.filter((p: any) => p.player !== playerName);
+
+    if (room.players.length === 0) {
+      // Delete room if no players left
+      delete rooms[roomId];
+    } else {
+      // Update room with new host if needed
+      if (room.host === playerName) {
+        room.host = room.players[0];
+        // Add notification about new host
+        notifications.push({
+          type: 'new_host',
+          player: room.host,
+          timestamp: Date.now(),
+          message: `${room.host} is now the host`
+        });
+        localStorage.setItem(`room_notifications_${roomId}`, JSON.stringify(notifications));
+      }
+      room.lastActivity = Date.now();
+      rooms[roomId] = room;
+    }
+    
+    localStorage.setItem('stopcomplete_rooms', JSON.stringify(rooms));
+
+    return { success: true };
+  };
+
+  const handleStatsAction = async (data: any) => {
+    const { playerName } = data;
+    
+    const stats = JSON.parse(localStorage.getItem(`stopcomplete_stats_${playerName}`) || '{}');
+    
+    if (Object.keys(stats).length === 0) {
+      const defaultStats = {
+        totalGames: 0,
+        wins: 0,
+        averageScore: 0,
+        bestScore: 0,
+        fastestFinish: 0
+      };
+      return { stats: defaultStats };
+    }
+
+    return { stats };
+  };
+
+  const handleUpdatesAction = async (data: any) => {
+    const { roomId } = data;
+    
+    const rooms = JSON.parse(localStorage.getItem('stopcomplete_rooms') || '{}');
+    const room = rooms[roomId];
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    return { room };
+  };
+
+  const updatePlayerStatsMock = (playerName: string, score: number) => {
+    const stats = JSON.parse(localStorage.getItem(`stopcomplete_stats_${playerName}`) || '{}');
+    
+    if (Object.keys(stats).length === 0) {
+      stats.totalGames = 0;
+      stats.wins = 0;
+      stats.averageScore = 0;
+      stats.bestScore = 0;
+      stats.fastestFinish = 0;
+    }
+
+    stats.totalGames += 1;
+    stats.bestScore = Math.max(stats.bestScore, score);
+    stats.averageScore = (stats.averageScore * (stats.totalGames - 1) + score) / stats.totalGames;
+
+    localStorage.setItem(`stopcomplete_stats_${playerName}`, JSON.stringify(stats));
+  };
+
+  const getCategoriesForMode = (mode: string) => {
+    switch (mode) {
+      case 'easy': return ['boyName', 'girlName', 'plant', 'fruit', 'country'];
+      case 'medium': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
+      case 'hard': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color', 'food', 'movie', 'sport'];
+      default: return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
+    }
+  };
+
+  const getCategoryLabel = (category: string) => {
+    return CATEGORY_LABELS[category] || category;
+  };
+
+  const calculateScore = (playerAnswers: any, allAnswers: any[], currentPlayer: string) => {
+    let score = 0;
+    let uniqueAnswers = 0;
+    
+    const categories = Object.keys(playerAnswers);
+    
+    categories.forEach(category => {
+      const answer = playerAnswers[category];
+      if (answer && answer.trim()) {
+        // Check if this answer is unique
+        const isUnique = !allAnswers.some(otherPlayer => 
+          otherPlayer.player !== currentPlayer && 
+          otherPlayer.answers[category]?.toLowerCase() === answer.toLowerCase()
+        );
+        
+        if (isUnique) {
+          score += 10;
+          uniqueAnswers++;
+        } else {
+          score += 5;
+        }
+      }
+    });
+    
+    // Bonus for finishing first
+    const finishOrder = allAnswers.findIndex(p => p.player === currentPlayer);
+    if (finishOrder === 0) {
+      score += 20;
+    } else if (finishOrder === 1) {
+      score += 10;
+    }
+    
+    return { score, uniqueAnswers };
   };
 
   const createRoom = async () => {
@@ -278,10 +822,14 @@ const StopComplete: React.FC = () => {
         timeLimit
       });
 
-      setRoom(result.room);
-      setRoomId(result.roomId);
-      setIsHost(true);
-      playSound(440);
+      if (result && typeof result === 'object' && 'room' in result && 'roomId' in result) {
+        setRoom(result.room);
+        setRoomId(result.roomId as string);
+        setIsHost(true);
+        playSound(440);
+      } else {
+        setError("Failed to create room. Please try again.");
+      }
     } catch (error) {
       // Error already set by apiCall
     }
@@ -301,9 +849,11 @@ const StopComplete: React.FC = () => {
         password
       });
 
-      setRoom(result.room);
-      setIsHost(result.room.host === playerName);
-      playSound(523);
+      if ('room' in result) {
+        setRoom(result.room);
+        setIsHost(result.room.host === playerName);
+        playSound(523);
+      }
     } catch (error) {
       // Error already set by apiCall
     }
@@ -366,15 +916,18 @@ const StopComplete: React.FC = () => {
         answers
       });
 
-      playSound(1047);
-      
-      // Update local stats
-      setGameStats(prev => ({
-        ...prev,
-        totalGames: prev.totalGames + 1,
-        bestScore: Math.max(prev.bestScore, result.score),
-        averageScore: (prev.averageScore * prev.totalGames + result.score) / (prev.totalGames + 1)
-      }));
+      if ('score' in result && typeof result.score === 'number') {
+        const score = result.score as number;
+        playSound(1047);
+        
+        // Update local stats
+        setGameStats(prev => ({
+          ...prev,
+          totalGames: prev.totalGames + 1,
+          bestScore: Math.max(prev.bestScore, score),
+          averageScore: (prev.averageScore * prev.totalGames + score) / (prev.totalGames + 1)
+        }));
+      }
     } catch (error) {
       // Error already set by apiCall
     }
@@ -404,6 +957,15 @@ const StopComplete: React.FC = () => {
       });
       setTimeLeft(timeLimit);
       setIsSelecting(false);
+      setSelectedLetter('');
+      setLetterAnimationHandled(false);
+      animationHandledRef.current = false;
+      
+      // Clear any running animation
+      if (animationRef.current) {
+        clearInterval(animationRef.current);
+        animationRef.current = null;
+      }
     } catch (error) {
       // Error already set by apiCall
     }
@@ -434,6 +996,15 @@ const StopComplete: React.FC = () => {
         movie: '',
         sport: ''
       });
+      setSelectedLetter('');
+      setLetterAnimationHandled(false);
+      animationHandledRef.current = false;
+      
+      // Clear any running animation
+      if (animationRef.current) {
+        clearInterval(animationRef.current);
+        animationRef.current = null;
+      }
     } catch (error) {
       // Error already set by apiCall
     }
@@ -581,6 +1152,17 @@ const StopComplete: React.FC = () => {
             </div>
           )}
 
+          {/* Notifications */}
+          {notifications.length > 0 && (
+            <div className="mb-4 space-y-2">
+              {notifications.map((notification, index) => (
+                <div key={index} className="p-3 bg-blue-500/20 border border-blue-500/50 rounded-lg text-blue-300 animate-fade-in">
+                  {notification}
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Room: {room.id}</h1>
             <div className="flex items-center space-x-2">
@@ -670,6 +1252,7 @@ const StopComplete: React.FC = () => {
                 {selectedLetter}
               </div>
               <div className="text-xl mt-4 text-gray-300">Selecting letter...</div>
+              <div className="text-sm text-gray-400 mt-2">Debug: isSelecting={isSelecting.toString()}</div>
             </div>
           )}
 
