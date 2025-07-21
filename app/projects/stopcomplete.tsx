@@ -590,6 +590,7 @@ const StopComplete: React.FC = () => {
 
   const startGame = async () => {
     if (!isHost || !room) return;
+    setIsLoading(true);
     try {
       await apiCall('stopcomplete-rooms', {
         action: 'start',
@@ -599,6 +600,8 @@ const StopComplete: React.FC = () => {
       playSound(880);
     } catch (error) {
       // Error already set by apiCall
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -938,10 +941,10 @@ const StopComplete: React.FC = () => {
           {isHost && !room.isGameStarted && (
             <button
               onClick={startGame}
-              disabled={room.isGameStarted}
+              disabled={isLoading || room.isGameStarted}
               className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {room.isGameStarted ? 'Starting...' : 'Start Game'}
+              {isLoading ? 'Starting...' : 'Start Game'}
             </button>
           )}
 
