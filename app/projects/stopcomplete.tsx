@@ -670,7 +670,7 @@ const StopComplete: React.FC = () => {
     }
   };
 
-  const isPlayerFinished = room?.finishedPlayers.some(p => p.player === playerName) || false;
+  const isPlayerFinished = (room.finishedPlayers || []).some(p => p.player === playerName) || false;
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -871,7 +871,7 @@ const StopComplete: React.FC = () => {
                       {player === room.host && (
                         <span className="px-2 py-1 text-sm bg-blue-500/50 rounded-full">Host</span>
                       )}
-                      {room.finishedPlayers.some(p => p.player === player) && (
+                      {isPlayerFinished && (
                         <span className="px-2 py-1 text-sm bg-green-500/50 rounded-full">Finished</span>
                       )}
                     </div>
@@ -900,7 +900,7 @@ const StopComplete: React.FC = () => {
                 </button>
               )}
 
-              {isHost && room.isGameStarted && room.finishedPlayers.length === room.players.length && (
+              {isHost && room.isGameStarted && (room.finishedPlayers || []).length === room.players.length && (
                 <button
                   onClick={resetGame}
                   disabled={isLoading}
@@ -954,11 +954,11 @@ const StopComplete: React.FC = () => {
             </div>
           )}
 
-          {room.finishedPlayers.length > 0 && (
+          {(room.finishedPlayers || []).length > 0 && (
             <div className="mt-8 space-y-6">
               <h2 className="text-2xl font-bold text-center mb-6">Results</h2>
               <div className="space-y-4">
-                {room.finishedPlayers
+                {(room.finishedPlayers || [])
                   .sort((a, b) => b.score - a.score)
                   .map((player, index) => (
                   <div key={player.player} className="bg-gray-800/30 p-4 rounded-lg">
