@@ -701,17 +701,17 @@ const StopComplete: React.FC = () => {
           <div className="max-w-md mx-auto backdrop-blur-md bg-white/10 rounded-xl shadow-lg overflow-hidden p-6 mt-20">
             <h1 className="text-3xl font-bold mb-6 text-center text-white">Stop It's Complete!</h1>
             
-            {/* Backend API Notice */}
+            {/* Backend API Notice
             <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500/50 rounded-lg text-blue-300 text-sm">
               <strong>Backend API Mode:</strong> Using Vercel API endpoints with Firebase Realtime Database. 
               True cross-device multiplayer enabled with secure authentication! 🔐
-            </div>
+            </div> */}
             
-            {error && (
+            {/* {error && (
               <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300">
                 {error}
               </div>
-            )}
+            )} */}
             
             {/* Game Stats */}
             <div className="mb-6 p-4 bg-gray-800/30 rounded-lg">
@@ -973,10 +973,7 @@ const StopComplete: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <span className="font-semibold">{playerName}</span>
-                {index === 0 && <span className="px-2 py-1 text-sm bg-yellow-500/50 rounded-full">🥇</span>}
-                {index === 1 && <span className="px-2 py-1 text-sm bg-gray-400/50 rounded-full">🥈</span>}
-                {index === 2 && <span className="px-2 py-1 text-sm bg-orange-500/50 rounded-full">🥉</span>}
-                  </div>
+              </div>
               <div className="text-right">
                 <div className="font-bold text-lg">{player ? player.score : 0} pts</div>
                 <div className="text-sm text-gray-400">{player ? player.uniqueAnswers : 0} unique</div>

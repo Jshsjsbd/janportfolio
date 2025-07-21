@@ -160,7 +160,10 @@ async function startGame(data: any, res: VercelResponse) {
   }
 
   // Generate random letter
-  const selectedLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+  const arabicLetters = [
+    'ا', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي'
+  ];
+  const selectedLetter = arabicLetters[Math.floor(Math.random() * arabicLetters.length)];
 
   await update(roomRef, {
     isGameStarted: true,
@@ -389,16 +392,16 @@ function getCategoriesForMode(mode: string) {
 
 function getCategoryLabel(category: string) {
   const labels: Record<string, string> = {
-    boyName: 'Boy Name',
-    girlName: 'Girl Name',
-    plant: 'Plant',
-    fruit: 'Fruit',
-    country: 'Country',
-    animal: 'Animal',
-    color: 'Color',
-    food: 'Food',
-    movie: 'Movie',
-    sport: 'Sport'
+    boyName: 'اسم ولد',
+    girlName: 'اسم بنت',
+    plant: 'نبات',
+    fruit: 'فاكهة',
+    country: 'بلد',
+    animal: 'حيوان',
+    color: 'لون',
+    food: 'اكلة',
+    movie: 'فيلم',
+    sport: 'رياضة'
   };
   return labels[category] || category;
 }
