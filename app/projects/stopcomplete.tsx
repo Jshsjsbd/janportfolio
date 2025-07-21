@@ -117,10 +117,6 @@ const StopComplete: React.FC = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  const animationRef = useRef<NodeJS.Timeout | null>(null);
-  const animationHandledRef = useRef<boolean>(false);
-  const animationRunningRef = useRef(false);
-  const previousRoomRef = useRef<Room | null>(null);
 
   // Initialize audio context
   useEffect(() => {
@@ -173,9 +169,6 @@ const StopComplete: React.FC = () => {
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
         pollingRef.current = null;
-      }
-      if (animationRef.current) {
-        clearInterval(animationRef.current);
       }
     };
   }, [roomId, room]);
@@ -260,10 +253,9 @@ const StopComplete: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      if (animationRef.current) {
-        clearInterval(animationRef.current);
-        animationRef.current = null;
-        animationRunningRef.current = false;
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
   }, []);
@@ -272,12 +264,9 @@ const StopComplete: React.FC = () => {
   // Reset letterAnimationHandled when game state changes
   useEffect(() => {
     if (room && !room.isGameStarted) {
-      // setLetterAnimationHandled(false); // Removed
-      // setIsSelecting(false); // Removed
-      // animationHandledRef.current = false; // Removed
-      if (animationRef.current) {
-        clearInterval(animationRef.current);
-        animationRef.current = null;
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     }
   }, [room?.isGameStarted]);
@@ -370,7 +359,6 @@ const StopComplete: React.FC = () => {
         
         if ('room' in data && data.room) {
           const updatedRoom = data.room as Room;
-          const previousRoom = previousRoomRef.current;
           
           setRoom(updatedRoom);
           setIsHost(updatedRoom.host === playerName);
@@ -382,8 +370,8 @@ const StopComplete: React.FC = () => {
             // isSelecting, // Removed
             // letterAnimationHandled, // Removed
             // animationHandled: animationHandledRef.current, // Removed
-            previousRoomExists: !!previousRoom,
-            previousRoomIsGameStarted: previousRoom ? previousRoom.isGameStarted : undefined
+            previousRoomExists: false, // Removed
+            previousRoomIsGameStarted: undefined
           });
           // Handle letter selection animation only when game first starts
           // AND we haven't handled it yet AND we're not currently selecting
@@ -394,15 +382,14 @@ const StopComplete: React.FC = () => {
             // !isSelecting && // Removed
             // !letterAnimationHandled && // Removed
             // !animationHandledRef.current && // Removed
-            previousRoom &&
-            !previousRoom.isGameStarted
+            false && // Removed
+            false
           ) {
             console.log('Triggering letter animation - game just started');
             // setLetterAnimationHandled(true); // Removed
             // animationHandledRef.current = true; // Removed
             // handleLetterSelection(updatedRoom.selectedLetter); // Removed
           }
-          previousRoomRef.current = updatedRoom;
         }
       } catch (error) {
         console.error('[Polling] Error:', error);
@@ -410,40 +397,6 @@ const StopComplete: React.FC = () => {
       }
     }, 2000);
   };
-
-  const handleLetterSelection = (letter: string) => {
-    console.log('[ANIMATION STATUS]', {
-      // isSelecting, // Removed
-      animationRunning: animationRunningRef.current,
-      animationRef: animationRef.current,
-    });
-    
-    if (animationRunningRef.current) return; // Prevent double animation
-    animationRunningRef.current = true;
-  
-    console.log('[handleLetterSelection] called with letter:', letter);
-    // setIsSelecting(true); // Removed
-    // setAnimatedLetter(''); // Removed
-    playSound(440);
-  
-    let count = 0;
-    animationRef.current = setInterval(() => {
-      const randomLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-      // setAnimatedLetter(randomLetter); // Removed
-      count++;
-  
-      if (count > 20) {
-        clearInterval(animationRef.current!);
-        animationRef.current = null;
-        animationRunningRef.current = false;
-        // setIsSelecting(false); // Removed
-        // setAnimatedLetter(''); // Removed
-        // setSelectedLetter(letter); // Removed
-        console.log('Letter animation finished, final letter:', letter);
-      }
-    }, 100);
-  };
-  
 
   const playSound = (frequency: number, duration: number = 200) => {
     if (!audioContext.current) return;
@@ -664,13 +617,12 @@ const StopComplete: React.FC = () => {
       setSelectedLetter('');
       // setLetterAnimationHandled(false); // Removed
       // animationHandledRef.current = false; // Removed
-      previousRoomRef.current = null;
       // setShouldAnimateLetter(false); // Removed
       
       // Clear any running animation
-      if (animationRef.current) {
-        clearInterval(animationRef.current);
-        animationRef.current = null;
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     } catch (error) {
       // Error already set by apiCall
@@ -705,13 +657,12 @@ const StopComplete: React.FC = () => {
       setSelectedLetter('');
       // setLetterAnimationHandled(false); // Removed
       // animationHandledRef.current = false; // Removed
-      previousRoomRef.current = null;
       // setShouldAnimateLetter(false); // Removed
       
       // Clear any running animation
-      if (animationRef.current) {
-        clearInterval(animationRef.current);
-        animationRef.current = null;
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     } catch (error) {
       // Error already set by apiCall
