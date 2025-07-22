@@ -332,6 +332,15 @@ function Projects() {
 
             <div className="group bg-[rgba(34, 40, 49, 0.6)] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] p-6 rounded-lg flex flex-col hover:scale-105 hover:shadow-2xl transition">
               <div className="relative aspect-w-16 aspect-h-10 mb-5 rounded-lg overflow-hidden bg-gray-900">
+                <img alt="Stop It's Complete Game" className="w-full h-36 object-cover bg-black opacity-85 group-hover:opacity-100 transition duration-300"/>
+              </div>
+              <h3 className="font-bold text-xl text-teal-200 mb-2">Stop It's Complete Game</h3>
+              <p className="text-gray-300 mb-2 text-sm">A game where you can play with your friends and family and gains information</p>
+              <Link to="/projects/xo" className="text-teal-300 mt-auto hover:underline">View Live &rarr;</Link>
+            </div>
+
+            <div className="group bg-[rgba(34, 40, 49, 0.6)] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] backdrop-blur-[8px] rounded-[1.25rem] p-6 rounded-lg flex flex-col hover:scale-105 hover:shadow-2xl transition">
+              <div className="relative aspect-w-16 aspect-h-10 mb-5 rounded-lg overflow-hidden bg-gray-900">
                 <img alt="Qr Generator" className="w-full h-36 object-cover bg-black opacity-85 group-hover:opacity-100 transition duration-300"/>
               </div>
               <h3 className="font-bold text-xl text-teal-200 mb-2">Qr Code Generator</h3>
