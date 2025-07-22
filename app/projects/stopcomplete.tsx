@@ -894,19 +894,6 @@ const StopComplete: React.FC = () => {
                 onChange={(e) => setCreatePassword(e.target.value)}
                 className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
               />
-              {error && (
-                <div className="mb-3 flex items-center p-3 bg-red-600/90 border border-red-400 rounded-lg text-white shadow-lg animate-fade-in-error relative">
-                  <span className="mr-2 text-xl">❌</span>
-                  <span className="flex-1">{error}</span>
-                  <button
-                    onClick={() => setError(null)}
-                    className="ml-2 text-white hover:text-red-200 text-lg font-bold focus:outline-none"
-                    aria-label="Dismiss error"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
               <button
                 onClick={createRoom}
                   disabled={isCreatingRoomLoading}
