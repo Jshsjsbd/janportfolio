@@ -824,11 +824,11 @@ const StopComplete: React.FC = () => {
           <div className="max-w-md mx-auto backdrop-blur-md bg-white/10 rounded-xl shadow-lg overflow-hidden p-6 mt-20">
             <h1 className="text-3xl font-bold mb-6 text-center text-white">Stop It's Complete!</h1>
             
-            {/* Backend API Notice
+            {/* Exiting notice Notice */}
             <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500/50 rounded-lg text-blue-300 text-sm">
-              <strong>Backend API Mode:</strong> Using Vercel API endpoints with Firebase Realtime Database. 
-              True cross-device multiplayer enabled with secure authentication! 🔐
-            </div> */}
+              <strong>Warning:</strong> Don't leave the page while playing even if it's still opened beacause of the game security to have a fair experience.
+              Leaving the page while playing will take you out of the room and the game! ⚠️
+            </div>
             
             {/* {error && (
               <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300">
