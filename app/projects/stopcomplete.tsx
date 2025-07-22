@@ -86,7 +86,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 const StopComplete: React.FC = () => {
   const [playerName, setPlayerName] = useState('');
   const [roomId, setRoomId] = useState('');
-  const [password, setPassword] = useState('');
+  const [createPassword, setCreatePassword] = useState('');
+  const [joinPassword, setJoinPassword] = useState('');
   const [room, setRoom] = useState<Room | null>(null);
   const [isHost, setIsHost] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState<string>('');
@@ -483,7 +484,7 @@ const StopComplete: React.FC = () => {
   };
 
   const createRoom = async () => {
-    if (!playerName.trim() || !password.trim()) {
+    if (!playerName.trim() || !createPassword.trim()) {
       setError("Name and password required");
       return;
     }
@@ -492,7 +493,7 @@ const StopComplete: React.FC = () => {
       const result = await apiCall('stopcomplete-rooms', {
         action: 'create',
         playerName,
-        password,
+        createPassword,
         gameMode,
         timeLimit
       });
@@ -511,7 +512,7 @@ const StopComplete: React.FC = () => {
   };
 
   const joinRoom = async () => {
-    if (!playerName.trim() || !roomId.trim() || !password.trim()) {
+    if (!playerName.trim() || !roomId.trim() || !joinPassword.trim()) {
       setError("Missing fields");
       return;
     }
@@ -521,7 +522,7 @@ const StopComplete: React.FC = () => {
         action: 'join',
         roomId,
         playerName,
-        password
+        joinPassword
       });
 
       if ('room' in result) {
@@ -805,8 +806,8 @@ const StopComplete: React.FC = () => {
               <input
                 type="password"
                 placeholder="Set Room Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={createPassword}
+                onChange={(e) => setCreatePassword(e.target.value)}
                 className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
               />
               <button
@@ -830,8 +831,8 @@ const StopComplete: React.FC = () => {
               <input
                 type="password"
                 placeholder="Room Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={joinPassword}
+                onChange={(e) => setJoinPassword(e.target.value)}
                 className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
               />
               <button
