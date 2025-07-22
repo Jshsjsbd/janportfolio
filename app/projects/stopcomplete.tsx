@@ -15,11 +15,66 @@ const notificationStyles = `
   }
 `;
 
+// Add this CSS for fade-in animation (if not already present):
+const errorStyles = `
+  @keyframes fadeInError {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in-error {
+    animation: fadeInError 0.4s ease-out;
+  }
+`;
+
+// Add or update the CSS for a centered modal error overlay:
+const errorModalStyles = `
+  .error-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .error-modal-box {
+    min-width: 320px;
+    max-width: 90vw;
+    background: #dc2626;
+    color: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    padding: 2rem 2.5rem 1.5rem 2.5rem;
+    position: relative;
+    text-align: center;
+    animation: fadeInError 0.4s ease-out;
+  }
+  .error-modal-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 1.25rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1;
+    transition: color 0.2s;
+  }
+  .error-modal-close:hover {
+    color: #fee2e2;
+  }
+`;
+
 // Inject styles
 if (typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.textContent = notificationStyles;
   document.head.appendChild(style);
+  const errorStyle = document.createElement('style');
+  errorStyle.textContent = errorStyles;
+  document.head.appendChild(errorStyle);
 }
 
 interface GameAnswer {
@@ -458,7 +513,14 @@ const StopComplete: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Friendly error messages for common HTTP errors
+        if (response.status === 404) {
+          throw new Error('لم يتم العثور على البيانات المطلوبة'); // Requested data not found
+        } else if (response.status === 500) {
+          throw new Error('حدث خطأ في الخادم. يرجى المحاولة لاحقاً'); // Server error
+        } else {
+          throw new Error('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى'); // Unexpected error
+        }
       }
 
       const result = await response.json();
@@ -469,7 +531,7 @@ const StopComplete: React.FC = () => {
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى';
       setError(errorMessage);
       throw error;
     } finally {
@@ -735,11 +797,19 @@ const StopComplete: React.FC = () => {
               True cross-device multiplayer enabled with secure authentication! 🔐
             </div> */}
             
-            {/* {error && (
-              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300">
-                {error}
-              </div>
-            )} */}
+            {error && (
+                <div className="mb-3 flex items-center p-3 bg-red-600/90 border border-red-400 rounded-lg text-white shadow-lg animate-fade-in-error relative">
+                  <span className="mr-2 text-xl">❌</span>
+                  <span className="flex-1">{error}</span>
+                  <button
+                    onClick={() => setError(null)}
+                    className="ml-2 text-white hover:text-red-200 text-lg font-bold focus:outline-none"
+                    aria-label="Dismiss error"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
             
             {/* Game Stats */}
             <div className="mb-6 p-4 bg-gray-800/30 rounded-lg">
@@ -810,6 +880,19 @@ const StopComplete: React.FC = () => {
                 onChange={(e) => setCreatePassword(e.target.value)}
                 className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
               />
+              {error && (
+                <div className="mb-3 flex items-center p-3 bg-red-600/90 border border-red-400 rounded-lg text-white shadow-lg animate-fade-in-error relative">
+                  <span className="mr-2 text-xl">❌</span>
+                  <span className="flex-1">{error}</span>
+                  <button
+                    onClick={() => setError(null)}
+                    className="ml-2 text-white hover:text-red-200 text-lg font-bold focus:outline-none"
+                    aria-label="Dismiss error"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
               <button
                 onClick={createRoom}
                   disabled={isCreatingRoomLoading}
@@ -857,8 +940,20 @@ const StopComplete: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto backdrop-blur-md bg-white/10 rounded-xl shadow-lg overflow-hidden p-6 mt-20">
           {error && (
-            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300">
-              {error}
+            <div className="error-modal-overlay">
+              <div className="error-modal-box animate-fade-in-error">
+                <button
+                  onClick={() => setError(null)}
+                  className="error-modal-close"
+                  aria-label="Dismiss error"
+                >
+                  ×
+                </button>
+                <div className="flex flex-col items-center justify-center">
+                  <span className="text-3xl mb-2">❌</span>
+                  <span className="text-lg font-semibold">{error}</span>
+                </div>
+              </div>
             </div>
           )}
 
