@@ -112,7 +112,9 @@ const StopComplete: React.FC = () => {
     movie: '',
     sport: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingRoomLoading, setIsCreatingRoomLoading] = useState(false);
+  const [isJoiningRoomLoading, setIsJoiningRoomLoading] = useState(false);
+  const [isStartingGameLoading, setIsStartingGameLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]);
 
@@ -431,7 +433,15 @@ const StopComplete: React.FC = () => {
   };
 
   const apiCall = async (endpoint: string, data: any) => {
-    setIsLoading(true);
+    // i want to check if the action is create or join or start to set the loading state
+    if (data.action === 'create') {
+      setIsCreatingRoomLoading(true);
+    } else if (data.action === 'join') {
+      setIsJoiningRoomLoading(true);
+    } else if (data.action === 'start') {
+      setIsStartingGameLoading(true);
+    }
+    // setIsLoading(true);
     setError(null);
     
     try {
@@ -460,7 +470,13 @@ const StopComplete: React.FC = () => {
       setError(errorMessage);
       throw error;
     } finally {
-      setIsLoading(false);
+      if (data.action === 'create') {
+        setIsCreatingRoomLoading(false);
+      } else if (data.action === 'join') {
+        setIsJoiningRoomLoading(false);
+      } else if (data.action === 'start') {
+        setIsStartingGameLoading(false);
+      }
     }
   };
 
@@ -545,7 +561,7 @@ const StopComplete: React.FC = () => {
 
   const startGame = async () => {
     if (!isHost || !room) return;
-    setIsLoading(true);
+    setIsStartingGameLoading(true);
     try {
       await apiCall('stopcomplete-rooms', {
         action: 'start',
@@ -556,7 +572,7 @@ const StopComplete: React.FC = () => {
     } catch (error) {
       // Error already set by apiCall
     } finally {
-      setIsLoading(false);
+      setIsStartingGameLoading(false);
     }
   };
 
@@ -784,10 +800,10 @@ const StopComplete: React.FC = () => {
               />
               <button
                 onClick={createRoom}
-                  disabled={isLoading}
+                  disabled={isCreatingRoomLoading}
                   className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                  {isLoading ? 'Creating...' : 'Create Room'}
+                  {isCreatingRoomLoading ? 'Creating...' : 'Create Room'}
               </button>
             </div>
 
@@ -809,10 +825,10 @@ const StopComplete: React.FC = () => {
               />
               <button
                 onClick={joinRoom}
-                  disabled={isLoading}
+                  disabled={isJoiningRoomLoading}
                   className="w-full bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                  {isLoading ? 'Joining...' : 'Join Room'}
+                  {isJoiningRoomLoading ? 'Joining...' : 'Join Room'}
               </button>
               </div>
             </div>
@@ -909,10 +925,10 @@ const StopComplete: React.FC = () => {
           {isHost && !room.isGameStarted && (
             <button
               onClick={startGame}
-              disabled={isLoading || room.isGameStarted}
+              disabled={isStartingGameLoading || room.isGameStarted}
               className="w-full bg-blue-500/80 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-              {isLoading ? 'Starting...' : 'Start Game'}
+              {isStartingGameLoading ? 'Starting...' : 'Start Game'}
           </button>
         )}
 
