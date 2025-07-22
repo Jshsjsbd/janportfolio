@@ -401,6 +401,17 @@ function getCategoryLabel(category: string) {
   return labels[category] || category;
 }
 
+function normalizeArabic(str: string) {
+  if (!str) return '';
+  return str
+    .replace(/[أإآا]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[ًٌٍَُِّْ]/g, '') // remove diacritics
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
 function calculateScore(playerAnswers: any, allAnswers: any[], currentPlayer: string) {
   let score = 0;
   let uniqueAnswers = 0;
@@ -408,12 +419,12 @@ function calculateScore(playerAnswers: any, allAnswers: any[], currentPlayer: st
   const categories = Object.keys(playerAnswers);
   
   categories.forEach(category => {
-    const answer = playerAnswers[category];
+    const answer = normalizeArabic(playerAnswers[category]);
     if (answer && answer.trim()) {
-      // Check if this answer is unique among all players
+      // Check if this answer is unique among all players (normalized)
       const count = allAnswers.filter(otherPlayer =>
         otherPlayer.answers &&
-        otherPlayer.answers[category]?.trim().toLowerCase() === answer.trim().toLowerCase()
+        normalizeArabic(otherPlayer.answers[category]) === answer
       ).length;
       if (count === 1) {
         score += 10;
