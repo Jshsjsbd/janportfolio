@@ -60,9 +60,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 async function createRoom(data: any, res: VercelResponse) {
-  const { playerName, password, gameMode, timeLimit } = data;
+  const { playerName, createPassword, gameMode, timeLimit } = data;
 
-  if (!playerName?.trim() || !password?.trim()) {
+  if (!playerName?.trim() || !createPassword?.trim()) {
     return res.status(400).json({ error: 'Name and password required' });
   }
 
@@ -73,7 +73,7 @@ async function createRoom(data: any, res: VercelResponse) {
   
   const room = {
     id: roomId,
-    password,
+    createPassword,
     host: playerName,
     players: [playerName],
     isGameStarted: false,
@@ -97,9 +97,9 @@ async function createRoom(data: any, res: VercelResponse) {
 }
 
 async function joinRoom(data: any, res: VercelResponse) {
-  const { roomId, playerName, password } = data;
+  const { roomId, playerName, joinPassword } = data;
 
-  if (!roomId?.trim() || !playerName?.trim() || !password?.trim()) {
+  if (!roomId?.trim() || !playerName?.trim() || !joinPassword?.trim()) {
     return res.status(400).json({ error: 'Missing fields' });
   }
 
@@ -112,7 +112,7 @@ async function joinRoom(data: any, res: VercelResponse) {
 
   const room = roomSnapshot.val();
 
-  if (room.password !== password) {
+  if (room.createPassword !== joinPassword) {
     return res.status(401).json({ error: 'Wrong password' });
   }
 
