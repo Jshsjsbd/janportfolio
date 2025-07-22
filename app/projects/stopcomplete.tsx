@@ -1000,7 +1000,7 @@ const StopComplete: React.FC = () => {
 
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Room: {room.id}</h1>
-            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 sm:grid-cols-2">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 items-center space-x-2">
               <button
                 onClick={copyRoomId}
                 className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
