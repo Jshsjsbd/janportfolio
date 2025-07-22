@@ -794,6 +794,21 @@ const StopComplete: React.FC = () => {
     return (
       <div className="min-h-screen text-white">
         <Header type='projects' />
+        {error && (
+          <div className="error-modal-overlay" onClick={() => setError(null)}>
+            <div className="error-modal-box animate-fade-in-error" onClick={e => e.stopPropagation()}>
+              <span className="text-3xl mb-2">❌</span>
+              <span className="mb-2 text-lg text-center">{error}</span>
+              <button
+                className="error-modal-close"
+                onClick={() => setError(null)}
+                aria-label="Dismiss error"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-md mx-auto backdrop-blur-md bg-white/10 rounded-xl shadow-lg overflow-hidden p-6 mt-20">
             <h1 className="text-3xl font-bold mb-6 text-center text-white">Stop It's Complete!</h1>
@@ -936,24 +951,23 @@ const StopComplete: React.FC = () => {
   return (
     <div className="min-h-screen text-white">
       <Header type='projects' />
+      {error && (
+        <div className="error-modal-overlay" onClick={() => setError(null)}>
+          <div className="error-modal-box animate-fade-in-error" onClick={e => e.stopPropagation()}>
+            <span className="text-3xl mb-2">❌</span>
+            <span className="mb-2 text-lg text-center">{error}</span>
+            <button
+              className="error-modal-close"
+              onClick={() => setError(null)}
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto backdrop-blur-md bg-white/10 rounded-xl shadow-lg overflow-hidden p-6 mt-20">
-          {error && (
-            <div className="error-modal-overlay" onClick={() => setError(null)}>
-              <div className="error-modal-box animate-fade-in-error" onClick={e => e.stopPropagation()}>
-                <span className="text-3xl mb-2">❌</span>
-                <span className="mb-2 text-lg text-center">{error}</span>
-                <button
-                  className="error-modal-close"
-                  onClick={() => setError(null)}
-                  aria-label="Dismiss error"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Notifications */}
           {notifications.length > 0 && (
             <div className="mb-4 space-y-2">
