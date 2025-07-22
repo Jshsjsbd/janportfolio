@@ -213,9 +213,29 @@ const StopComplete: React.FC = () => {
 
   // Timer effect
   useEffect(() => {
-    if (room?.isGameStarted && timeLeft > 0 && room.gameStartTime) {
+    // If no room or game not started, clear timer
+    if (!room?.isGameStarted || room.isGameFinished) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    // If timeLimit is 0 (No Limit), do not start timer
+    if (room.timeLimit === 0) {
+      setTimeLeft(0);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    // Normal timer logic
+    if (room.gameStartTime) {
       const elapsed = Math.floor((Date.now() - room.gameStartTime) / 1000);
-      const remaining = Math.max(0, timeLimit - elapsed);
+      const remaining = Math.max(0, room.timeLimit - elapsed);
       setTimeLeft(remaining);
 
       timerRef.current = setInterval(() => {
@@ -231,9 +251,10 @@ const StopComplete: React.FC = () => {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
-  }, [room?.isGameStarted, timeLimit, room?.gameStartTime]);
+  }, [room?.isGameStarted, room?.isGameFinished, room?.gameStartTime, room?.timeLimit]);
 
   // Real-time updates with polling (since Firebase requires authentication)
   useEffect(() => {
@@ -1000,11 +1021,9 @@ const StopComplete: React.FC = () => {
           </div>
 
           {/* Timer */}
-          {room.isGameStarted && timeLimit > 0 && (
+          {room.isGameStarted && room.timeLimit > 0 && !room.isGameFinished && (
             <div className="mb-4 text-center">
-              <div className={`text-2xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-blue-400'}`}>
-                {formatTime(timeLeft)}
-              </div>
+              <div className={`text-2xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-blue-400'}`}>{formatTime(timeLeft)}</div>
             </div>
           )}
 
