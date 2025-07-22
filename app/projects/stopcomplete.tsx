@@ -59,6 +59,7 @@ interface Room {
   lastActivity: number;
   isGameFinished: boolean; // Added this field
   liveAnswers?: { [key: string]: GameAnswer }; // Added this field
+  finishedBy?: string; // Added this field
 }
 
 interface GameStats {
@@ -115,6 +116,7 @@ const StopComplete: React.FC = () => {
   const [isCreatingRoomLoading, setIsCreatingRoomLoading] = useState(false);
   const [isJoiningRoomLoading, setIsJoiningRoomLoading] = useState(false);
   const [isStartingGameLoading, setIsStartingGameLoading] = useState(false);
+  const [isResettingGameLoading, setIsResettingGameLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]);
 
@@ -622,7 +624,7 @@ const StopComplete: React.FC = () => {
 
   const resetGame = async () => {
     if (!isHost) return;
-
+    setIsResettingGameLoading(true);
     try {
       await apiCall('stopcomplete-rooms', {
         action: 'reset',
@@ -656,6 +658,8 @@ const StopComplete: React.FC = () => {
       }
     } catch (error) {
       // Error already set by apiCall
+    } finally {
+      setIsResettingGameLoading(false);
     }
   };
 
@@ -708,6 +712,13 @@ const StopComplete: React.FC = () => {
 
   // 1. Add a helper to check if the game is finished for everyone (all players in finishedPlayers):
   const isGameFinished = room && room.isGameFinished;
+
+  // Helper to get the player who finished the game first, or null if all finished or no one finished
+  const finishedBy = room && room.finishedPlayers && room.players
+    ? (room.finishedPlayers.length === room.players.length
+        ? null
+        : (room.finishedPlayers.length > 0 ? room.finishedPlayers[0].player : null))
+    : null;
 
   if (!room) {
     return (
@@ -903,7 +914,7 @@ const StopComplete: React.FC = () => {
                   {player === room.host && (
                         <span className="px-2 py-1 text-sm bg-blue-500/50 rounded-full">Host</span>
                       )}
-                      {isPlayerFinished && (
+                      {finishedBy === player && (
                         <span className="px-2 py-1 text-sm bg-green-500/50 rounded-full">Finished</span>
                       )}
                     </div>
@@ -935,10 +946,10 @@ const StopComplete: React.FC = () => {
               {isHost && room && room.isGameStarted && room.isGameFinished && (
                 <button
                   onClick={resetGame}
-                  disabled={false}
+                  disabled={isResettingGameLoading}
                   className="w-full bg-purple-500/80 text-white p-3 rounded-lg font-semibold hover:bg-purple-600 transition duration-300 ease-in-out mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  New Game
+                  {isResettingGameLoading ? 'Starting...' : 'New Game'}
                 </button>
               )}
             </div>
