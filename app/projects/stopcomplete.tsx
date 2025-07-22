@@ -825,9 +825,10 @@ const StopComplete: React.FC = () => {
             <h1 className="text-3xl font-bold mb-6 text-center text-white">Stop It's Complete!</h1>
             
             {/* Exiting notice Notice */}
-            <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500/50 rounded-lg text-blue-300 text-sm">
+            <div className="mb-4 p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-300 text-sm">
               <strong>Warning:</strong> Don't leave the page while playing even if it's still opened beacause of the game security to have a fair experience.
-              Leaving the page while playing will take you out of the room and the game! ⚠️
+              <br />
+              <strong>Leaving the page while playing will take you out of the room and the game! ⚠️</strong>
             </div>
             
             {/* {error && (
