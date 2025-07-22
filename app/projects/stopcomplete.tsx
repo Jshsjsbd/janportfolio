@@ -222,9 +222,8 @@ const StopComplete: React.FC = () => {
       return;
     }
 
-    // If timeLimit is 0 (No Limit), do not start timer
+    // If timeLimit is 0 (No Limit), do not start timer and do not set timeLeft
     if (room.timeLimit === 0) {
-      setTimeLeft(0);
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -1001,7 +1000,7 @@ const StopComplete: React.FC = () => {
 
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Room: {room.id}</h1>
-            <div className="flex items-center space-x-2 sm:flex-row sm:flex-col ">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               <button
                 onClick={copyRoomId}
                 className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
@@ -1024,6 +1023,11 @@ const StopComplete: React.FC = () => {
           {room.isGameStarted && room.timeLimit > 0 && !room.isGameFinished && (
             <div className="mb-4 text-center">
               <div className={`text-2xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-blue-400'}`}>{formatTime(timeLeft)}</div>
+            </div>
+          )}
+          {room.isGameStarted && room.timeLimit === 0 && !room.isGameFinished && (
+            <div className="mb-4 text-center">
+              <div className="text-2xl font-bold text-blue-400">∞</div>
             </div>
           )}
 
