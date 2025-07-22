@@ -526,10 +526,6 @@ const StopComplete: React.FC = () => {
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const result = await response.json();
       
       if (result.error) {
@@ -553,8 +549,14 @@ const StopComplete: React.FC = () => {
   };
 
   const createRoom = async () => {
-    if (!playerName.trim() || !createPassword.trim()) {
-      setError("Name and password required");
+    if (!playerName.trim() && !createPassword.trim()) {
+      setError("Your name and room password are required");
+      return;
+    } else if (!playerName.trim()) {
+      setError("Your name is required");
+      return;
+    } else if (!createPassword.trim()) {
+      setError("Room password is required");
       return;
     }
 
@@ -576,13 +578,22 @@ const StopComplete: React.FC = () => {
         setError("Failed to create room. Please try again.");
       }
     } catch (error) {
-      // Error already set by apiCall
+      setError("Failed to create room. Please try again.");
     }
   };
 
   const joinRoom = async () => {
-    if (!playerName.trim() || !roomId.trim() || !joinPassword.trim()) {
-      setError("Missing fields");
+    if (!playerName.trim() && !roomId.trim() && !joinPassword.trim()) {
+      setError("Your name, room ID, and room password are required");
+      return;
+    } else if (!playerName.trim()) {
+      setError("Your name is required");
+      return;
+    } else if (!roomId.trim()) {
+      setError("Room ID is required");
+      return;
+    } else if (!joinPassword.trim()) {
+      setError("Room password is required");
       return;
     }
 
@@ -600,7 +611,7 @@ const StopComplete: React.FC = () => {
         playSound(523);
       }
     } catch (error) {
-      // Error already set by apiCall
+      setError("Failed to join room. Please try again.");
     }
   };
 
@@ -627,7 +638,7 @@ const StopComplete: React.FC = () => {
       });
       playSound(330);
     } catch (error) {
-      // Error already set by apiCall
+      setError("Failed to kick player. Please try again.");
     }
   };
 
@@ -642,7 +653,7 @@ const StopComplete: React.FC = () => {
       });
       playSound(880);
     } catch (error) {
-      // Error already set by apiCall
+      setError("Failed to start game. Please try again.");
     } finally {
       setIsStartingGameLoading(false);
     }
@@ -688,7 +699,7 @@ const StopComplete: React.FC = () => {
         }));
       }
     } catch (error) {
-      // Error already set by apiCall
+      setError("Failed to finish game. Please try again.");
     }
   };
 
@@ -727,7 +738,7 @@ const StopComplete: React.FC = () => {
         timerRef.current = null;
       }
     } catch (error) {
-      // Error already set by apiCall
+      setError("Failed to reset game. Please try again.");
     } finally {
       setIsResettingGameLoading(false);
     }
@@ -769,7 +780,7 @@ const StopComplete: React.FC = () => {
         timerRef.current = null;
       }
     } catch (error) {
-      // Error already set by apiCall
+      setError("Failed to leave room. Please try again.");
     }
   };
 
@@ -968,7 +979,7 @@ const StopComplete: React.FC = () => {
 
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Room: {room.id}</h1>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 sm:flex-row sm:flex-col ">
               <button
                 onClick={copyRoomId}
                 className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
