@@ -26,44 +26,55 @@ const errorStyles = `
   }
 `;
 
-// Add or update the CSS for a centered modal error overlay:
-const errorModalStyles = `
+// Add this CSS for modal and overlay (if not already present):
+const modalStyles = `
   .error-modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.6);
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
+    animation: fadeInErrorOverlay 0.3s;
   }
   .error-modal-box {
-    min-width: 320px;
-    max-width: 90vw;
     background: #dc2626;
-    color: #fff;
+    color: white;
     border-radius: 1rem;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    padding: 2rem 2.5rem 1.5rem 2.5rem;
+    padding: 2rem 2.5rem;
+    min-width: 320px;
+    max-width: 90vw;
+    border: 2px solid #b91c1c;
     position: relative;
-    text-align: center;
-    animation: fadeInError 0.4s ease-out;
+    animation: fadeInErrorModal 0.4s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .error-modal-close {
     position: absolute;
-    top: 0.75rem;
-    right: 1.25rem;
+    top: 0.5rem;
+    right: 1rem;
+    font-size: 2rem;
+    color: white;
     background: none;
     border: none;
-    color: #fff;
-    font-size: 2rem;
-    font-weight: bold;
     cursor: pointer;
-    z-index: 1;
+    font-weight: bold;
     transition: color 0.2s;
   }
   .error-modal-close:hover {
     color: #fee2e2;
+  }
+  @keyframes fadeInErrorOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fadeInErrorModal {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
   }
 `;
 
@@ -75,6 +86,9 @@ if (typeof document !== 'undefined') {
   const errorStyle = document.createElement('style');
   errorStyle.textContent = errorStyles;
   document.head.appendChild(errorStyle);
+  const modalStyle = document.createElement('style');
+  modalStyle.textContent = modalStyles;
+  document.head.appendChild(modalStyle);
 }
 
 interface GameAnswer {
@@ -513,14 +527,7 @@ const StopComplete: React.FC = () => {
       });
 
       if (!response.ok) {
-        // Friendly error messages for common HTTP errors
-        if (response.status === 404) {
-          throw new Error('لم يتم العثور على البيانات المطلوبة'); // Requested data not found
-        } else if (response.status === 500) {
-          throw new Error('حدث خطأ في الخادم. يرجى المحاولة لاحقاً'); // Server error
-        } else {
-          throw new Error('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى'); // Unexpected error
-        }
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
@@ -531,7 +538,7 @@ const StopComplete: React.FC = () => {
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى';
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setError(errorMessage);
       throw error;
     } finally {
@@ -797,19 +804,11 @@ const StopComplete: React.FC = () => {
               True cross-device multiplayer enabled with secure authentication! 🔐
             </div> */}
             
-            {error && (
-                <div className="mb-3 flex items-center p-3 bg-red-600/90 border border-red-400 rounded-lg text-white shadow-lg animate-fade-in-error relative">
-                  <span className="mr-2 text-xl">❌</span>
-                  <span className="flex-1">{error}</span>
-                  <button
-                    onClick={() => setError(null)}
-                    className="ml-2 text-white hover:text-red-200 text-lg font-bold focus:outline-none"
-                    aria-label="Dismiss error"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
+            {/* {error && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300">
+                {error}
+              </div>
+            )} */}
             
             {/* Game Stats */}
             <div className="mb-6 p-4 bg-gray-800/30 rounded-lg">
@@ -940,19 +939,17 @@ const StopComplete: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto backdrop-blur-md bg-white/10 rounded-xl shadow-lg overflow-hidden p-6 mt-20">
           {error && (
-            <div className="error-modal-overlay">
-              <div className="error-modal-box animate-fade-in-error">
+            <div className="error-modal-overlay" onClick={() => setError(null)}>
+              <div className="error-modal-box animate-fade-in-error" onClick={e => e.stopPropagation()}>
+                <span className="text-3xl mb-2">❌</span>
+                <span className="mb-2 text-lg text-center">{error}</span>
                 <button
-                  onClick={() => setError(null)}
                   className="error-modal-close"
+                  onClick={() => setError(null)}
                   aria-label="Dismiss error"
                 >
                   ×
                 </button>
-                <div className="flex flex-col items-center justify-center">
-                  <span className="text-3xl mb-2">❌</span>
-                  <span className="text-lg font-semibold">{error}</span>
-                </div>
               </div>
             </div>
           )}
@@ -1096,7 +1093,7 @@ const StopComplete: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <span className="font-semibold">{playerName}</span>
-              </div>
+                  </div>
               <div className="text-right">
                 <div className="font-bold text-lg">{player ? player.score : 0} pts</div>
                 <div className="text-sm text-gray-400">{player ? player.uniqueAnswers : 0} unique</div>
