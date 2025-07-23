@@ -95,11 +95,11 @@ interface GameAnswer {
   boyName: string;
   girlName: string;
   plant: string;
-  fruit: string;
+  object: string;
   country: string;
   animal: string;
   color: string;
-  food: string;
+  fruit: string;
   movie: string;
   sport: string;
 }
@@ -143,11 +143,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   boyName: 'Boy Name',
   girlName: 'Girl Name',
   plant: 'Plant',
-  fruit: 'Fruit',
+  object: 'Object',
   country: 'Country',
   animal: 'Animal',
   color: 'Color',
-  food: 'Food',
+  fruit: 'Fruit',
   movie: 'Movie',
   sport: 'Sport'
 };
@@ -175,11 +175,11 @@ const StopComplete: React.FC = () => {
     boyName: '',
     girlName: '',
     plant: '',
-    fruit: '',
+    object: '',
     country: '',
     animal: '',
     color: '',
-    food: '',
+    fruit: '',
     movie: '',
     sport: ''
   });
@@ -188,6 +188,7 @@ const StopComplete: React.FC = () => {
   const [isStartingGameLoading, setIsStartingGameLoading] = useState(false);
   const [isResettingGameLoading, setIsResettingGameLoading] = useState(false);
   const [isLeavingRoomLoading, setIsLeavingRoomLoading] = useState(false);
+  const [isFinishingGameLoading, setIsFinishingGameLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]);
 
@@ -404,11 +405,11 @@ const StopComplete: React.FC = () => {
         boyName: '',
         girlName: '',
         plant: '',
-        fruit: '',
+        object: '',
         country: '',
         animal: '',
         color: '',
-        food: '',
+        fruit: '',
         movie: '',
         sport: ''
       });
@@ -418,10 +419,10 @@ const StopComplete: React.FC = () => {
 
   const getCategoriesForMode = (mode: string) => {
     switch (mode) {
-      case 'easy': return ['boyName', 'girlName', 'plant', 'fruit', 'country'];
-      case 'medium': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
-      case 'hard': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color', 'food', 'movie', 'sport'];
-      default: return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
+      case 'easy': return ['boyName', 'girlName', 'plant', 'object', 'country'];
+      case 'medium': return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color'];
+      case 'hard': return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color', 'fruit', 'movie', 'sport'];
+      default: return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color'];
     }
   };
 
@@ -719,7 +720,7 @@ const StopComplete: React.FC = () => {
 
   const handleFinish = async () => {
     if (!room || !playerName) return;
-
+    setIsFinishingGameLoading(true);
     try {
       const result = await apiCall('stopcomplete-rooms', {
         action: 'finish',
@@ -742,6 +743,8 @@ const StopComplete: React.FC = () => {
       }
     } catch (error) {
       setError("Failed to finish game. Please try again.");
+    } finally {
+      setIsFinishingGameLoading(false);
     }
   };
 
@@ -759,11 +762,11 @@ const StopComplete: React.FC = () => {
         boyName: '',
         girlName: '',
         plant: '',
-        fruit: '',
+        object: '',
         country: '',
         animal: '',
         color: '',
-        food: '',
+        fruit: '',
         movie: '',
         sport: ''
       });
@@ -804,11 +807,11 @@ const StopComplete: React.FC = () => {
         boyName: '',
         girlName: '',
         plant: '',
-        fruit: '',
+        object: '',
         country: '',
         animal: '',
         color: '',
-        food: '',
+        fruit: '',
         movie: '',
         sport: ''
       });

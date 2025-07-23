@@ -354,10 +354,10 @@ async function updatePlayerStats(playerName: string, score: number) {
 
 function getCategoriesForMode(mode: string) {
   switch (mode) {
-    case 'easy': return ['boyName', 'girlName', 'plant', 'fruit', 'country'];
-    case 'medium': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
-    case 'hard': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color', 'food', 'movie', 'sport'];
-    default: return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
+    case 'easy': return ['boyName', 'girlName', 'plant', 'object', 'country'];
+    case 'medium': return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color'];
+    case 'hard': return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color', 'fruit', 'movie', 'sport'];
+    default: return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color'];
   }
 }
 
@@ -366,11 +366,11 @@ function getCategoryLabel(category: string) {
     boyName: 'Boy Name',
     girlName: 'Girl Name',
     plant: 'Plant',
-    fruit: 'Fruit',
+    object: 'Object',
     country: 'Country',
     animal: 'Animal',
     color: 'Color',
-    food: 'Food',
+    fruit: 'Fruit',
     movie: 'Movie',
     sport: 'Sport'
   };
