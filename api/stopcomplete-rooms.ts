@@ -387,16 +387,16 @@ function getCategoriesForMode(mode: string) {
 
 function getCategoryLabel(category: string) {
   const labels: Record<string, string> = {
-    boyName: 'اسم ولد',
-    girlName: 'اسم بنت',
-    plant: 'نبات',
-    fruit: 'فاكهة',
-    country: 'بلد',
-    animal: 'حيوان',
-    color: 'لون',
-    food: 'اكلة',
-    movie: 'فيلم',
-    sport: 'رياضة'
+    boyName: 'Boy Name',
+    girlName: 'Girl Name',
+    plant: 'Plant',
+    fruit: 'Fruit',
+    country: 'Country',
+    animal: 'Animal',
+    color: 'Color',
+    food: 'Food',
+    movie: 'Movie',
+    sport: 'Sport'
   };
   return labels[category] || category;
 }

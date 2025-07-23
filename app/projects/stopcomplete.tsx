@@ -193,6 +193,8 @@ const StopComplete: React.FC = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  // Add this useRef to track previous isGameStarted state
+  const prevIsGameStarted = useRef<boolean | undefined>(undefined);
 
   // Initialize audio context
   useEffect(() => {
@@ -393,6 +395,26 @@ const StopComplete: React.FC = () => {
     }
   }, [room, room?.isGameStarted, room?.selectedLetter]);
 
+  // Add this useEffect after room is defined:
+  useEffect(() => {
+    // If the game just started (transitioned from not started to started), clear answers for all players
+    if (room && room.isGameStarted && !prevIsGameStarted.current) {
+      setAnswers({
+        boyName: '',
+        girlName: '',
+        plant: '',
+        fruit: '',
+        country: '',
+        animal: '',
+        color: '',
+        food: '',
+        movie: '',
+        sport: ''
+      });
+    }
+    prevIsGameStarted.current = room?.isGameStarted;
+  }, [room?.isGameStarted]);
+
   const getCategoriesForMode = (mode: string) => {
     switch (mode) {
       case 'easy': return ['boyName', 'girlName', 'plant', 'fruit', 'country'];
@@ -525,7 +547,6 @@ const StopComplete: React.FC = () => {
   };
 
   const apiCall = async (endpoint: string, data: any) => {
-    // i want to check if the action is create or join or start to set the loading state
     if (data.action === 'create') {
       setIsCreatingRoomLoading(true);
     } else if (data.action === 'join') {
