@@ -46,7 +46,7 @@ const MobileNav = React.forwardRef<HTMLDivElement, navParams>((props, ref) => {
         mt-10 relative right-5 p-7 rounded-xl 
         backdrop-blur-3xl custom-styles1 
         transform transition-all duration-500 ease-in-out
-        ${isVisible ? 'translate-y-0 opacity-100 visible' : '-translate-y-5 opacity-0 invisible pointer-events-none'}
+        ${isVisible ? 'translate-y-0 opacity-100 visible z-1000' : '-translate-y-5 opacity-0 invisible pointer-events-none z-0'}
     `;
 
     if (props.navType === 'home') {
