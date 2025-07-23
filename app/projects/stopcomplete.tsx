@@ -1021,19 +1021,19 @@ const StopComplete: React.FC = () => {
 
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Room: {room.id}</h1>
-            <div className="flex flex-col sm:flex-row sm:space-x-2 sm:space-y-0 space-y-2 w-full sm:w-auto mt-4 sm:mt-0">
+            <div className="grid grid-cols-1 gap-2 w-full sm:flex sm:flex-row sm:items-center sm:space-x-2 sm:w-auto mt-4 sm:mt-0">
               <button
                 onClick={copyRoomId}
-                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors w-full sm:w-auto"
+                className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
               >
                 {showCopied ? 'Copied!' : 'Copy ID'}
               </button>
-              <span className="block w-full sm:inline-block sm:w-auto px-2 py-1 bg-blue-500/50 rounded-full text-sm text-center">
+              <span className="px-2 py-1 bg-blue-500/50 rounded-full text-sm text-center">
                 {room.gameMode.charAt(0).toUpperCase() + room.gameMode.slice(1)}
               </span>
               <button
                 onClick={leaveRoom}
-                className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition-colors w-full sm:w-auto"
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition-colors"
               >
                 Leave
               </button>
