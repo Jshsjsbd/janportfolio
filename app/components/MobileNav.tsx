@@ -199,7 +199,7 @@ function HamburgerBtn(props: navParams) {
     return(
         <NavigationWrapper>
             <button 
-                className="flex flex-col gap-1 absolute right-5 rounded-full z-1000" 
+                className="flex flex-col gap-1 absolute right-5 rounded-full z-1000 visible" 
                 onClick={toggleVisibility}
             >
                 <div className={`border w-7 h-1 bg-white transition-all duration-300 ${
