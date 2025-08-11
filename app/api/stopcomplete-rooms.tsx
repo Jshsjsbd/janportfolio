@@ -17,13 +17,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const action = formData.get('action') as string;
+  let action: string;
+  let data: any = {};
   
-  const data: any = {};
-  for (const [key, value] of formData.entries()) {
-    if (key !== 'action') {
-      data[key] = value;
+  const contentType = request.headers.get('content-type');
+  
+  if (contentType?.includes('application/json')) {
+    // Handle JSON data
+    const jsonData = await request.json();
+    action = jsonData.action;
+    data = { ...jsonData };
+    delete data.action;
+  } else {
+    // Handle form data
+    const formData = await request.formData();
+    action = formData.get('action') as string;
+    
+    for (const [key, value] of formData.entries()) {
+      if (key !== 'action') {
+        data[key] = value;
+      }
     }
   }
 

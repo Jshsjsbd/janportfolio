@@ -1068,7 +1068,7 @@ const StopComplete: React.FC = () => {
                   {timeLeft <= 5 ? `HURRY! ${timeLeft} seconds left!` : "Time's almost up!"}
                 </div>
               )}
-              {/* Progress bar for time remaining */}
+              {/* Progress bar for time remaining
               <div className="mt-2 w-full bg-gray-700 rounded-full h-2">
                 <div 
                   className={`h-2 rounded-full transition-all duration-1000 ${
@@ -1079,7 +1079,7 @@ const StopComplete: React.FC = () => {
                   }`}
                   style={{ width: `${(timeLeft / room.timeLimit) * 100}%` }}
                 ></div>
-              </div>
+              </div> */}
             </div>
           )}
           {room.isGameStarted && room.timeLimit === 0 && !room.isGameFinished && (
