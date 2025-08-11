@@ -237,7 +237,7 @@ async function finishGame(data: any, res: VercelResponse) {
 }
 
 async function handleTimeUp(data: any, res: VercelResponse) {
-  const { roomId, playerName } = data;
+  const { roomId } = data;
 
   const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
   const roomSnapshot = await get(roomRef);
@@ -248,52 +248,65 @@ async function handleTimeUp(data: any, res: VercelResponse) {
 
   const room = roomSnapshot.val();
 
-  if (!room.isGameStarted || room.isGameFinished) {
-    return res.status(409).json({ error: 'Game not in progress' });
+  if (!room.isGameStarted) {
+    return res.status(409).json({ error: 'Game not started' });
   }
 
-  // Auto-finish the game for all players who haven't finished yet
+  if (room.isGameFinished) {
+    // Already finished, just return the results
+    return res.status(200).json({ success: true, finishedPlayers: room.finishedPlayers });
+  }
+
+  // Gather all answers from liveAnswers, using empty answers for unfinished players
   const allPlayers = room.players;
-  const unfinishedPlayers = allPlayers.filter((player: string) => 
-    !room.finishedPlayers.some((p: any) => p.player === player)
-  );
-
-  // For unfinished players, create empty answers and calculate scores
-  const newFinishedPlayers = unfinishedPlayers.map((player: string) => {
-    const emptyAnswers = room.categories.reduce((acc: any, cat: string) => {
-      acc[cat] = '';
-      return acc;
-    }, {});
-
-    const { score, uniqueAnswers } = calculateScore(emptyAnswers, room.finishedPlayers, player);
-
+  const allAnswers = allPlayers.map((player: string) => {
+    const existingAnswers = room.liveAnswers && room.liveAnswers[player] ? room.liveAnswers[player] : {};
+    
+    // If player has no answers, create empty answers for all categories
+    if (Object.keys(existingAnswers).length === 0) {
+      const emptyAnswers = room.categories.reduce((acc: any, cat: string) => {
+        acc[cat] = '';
+        return acc;
+      }, {});
+      return {
+        player,
+        answers: emptyAnswers
+      };
+    }
+    
     return {
       player,
-      answers: emptyAnswers,
+      answers: existingAnswers
+    };
+  });
+
+  // Calculate scores for all players
+  const finishedPlayers = allAnswers.map((entry: { player: string, answers: any }) => {
+    const { player, answers } = entry;
+    const { score, uniqueAnswers } = calculateScore(answers, allAnswers, player);
+    return {
+      player,
+      answers,
       finishTime: Date.now(),
       score,
       uniqueAnswers
     };
   });
 
-  // Combine existing finished players with new ones
-  const allFinishedPlayers = [...room.finishedPlayers, ...newFinishedPlayers];
-
-  // Update player stats for all newly finished players
-  for (const player of newFinishedPlayers) {
-    await updatePlayerStats(player.player, player.score);
-  }
-
-  // Mark game as finished
   await update(roomRef, {
-    finishedPlayers: allFinishedPlayers,
-    isGameFinished: true,
-    lastActivity: Date.now()
+    finishedPlayers,
+    lastActivity: Date.now(),
+    isGameFinished: true
   });
+
+  // Update player stats for all players
+  for (const p of finishedPlayers) {
+    await updatePlayerStats(p.player, p.score);
+  }
 
   return res.status(200).json({ 
     success: true, 
-    finishedPlayers: allFinishedPlayers,
+    finishedPlayers,
     timeUp: true
   });
 }

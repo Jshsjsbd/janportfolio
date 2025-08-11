@@ -538,8 +538,7 @@ const StopComplete: React.FC = () => {
       // Auto-finish the game for all players
       await apiCall('stopcomplete-rooms', {
         action: 'timeUp',
-        roomId,
-        playerName
+        roomId
       });
     } catch (error) {
       console.error('Error handling time up:', error);
