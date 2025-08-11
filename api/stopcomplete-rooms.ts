@@ -378,25 +378,25 @@ async function updateAnswers(data: any, res: VercelResponse) {
 
 function getCategoriesForMode(mode: string) {
   switch (mode) {
-    case 'easy': return ['boyName', 'girlName', 'plant', 'object', 'country'];
-    case 'medium': return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color'];
-    case 'hard': return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color', 'fruit', 'movie', 'sport'];
-    default: return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color'];
+    case 'easy': return ['boyName', 'girlName', 'plant', 'fruit', 'country'];
+    case 'medium': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
+    case 'hard': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color', 'food', 'movie', 'sport'];
+    default: return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
   }
 }
 
 function getCategoryLabel(category: string) {
   const labels: Record<string, string> = {
-    boyName: 'Boy Name',
-    girlName: 'Girl Name',
-    plant: 'Plant',
-    object: 'Object',
-    country: 'Country',
-    animal: 'Animal',
-    color: 'Color',
-    fruit: 'Fruit',
-    movie: 'Movie',
-    sport: 'Sport'
+    boyName: 'اسم ولد',
+    girlName: 'اسم بنت',
+    plant: 'نبات',
+    fruit: 'فاكهة',
+    country: 'بلد',
+    animal: 'حيوان',
+    color: 'لون',
+    food: 'اكلة',
+    movie: 'فيلم',
+    sport: 'رياضة'
   };
   return labels[category] || category;
 }

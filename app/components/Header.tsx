@@ -56,7 +56,7 @@ function Header(props: HeaderParams) {
                                 </li>
                             </ul>
                         </div>
-                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden invisible" ref={menuRef}>
+                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden" ref={menuRef}>
                             <HamburgerBtn navType="home" />
                         </div>
                     </div>
@@ -91,7 +91,7 @@ function Header(props: HeaderParams) {
                                 </li>
                             </ul>
                         </div>
-                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden invisible" ref={menuRef}>
+                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden" ref={menuRef}>
                             <HamburgerBtn navType="about" />
                         </div>
                     </div>
@@ -126,7 +126,7 @@ function Header(props: HeaderParams) {
                                 </li>
                             </ul>
                         </div>
-                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden invisible" ref={menuRef}>
+                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden" ref={menuRef}>
                             <HamburgerBtn navType="projects" />
                         </div>
                     </div>
@@ -161,7 +161,7 @@ function Header(props: HeaderParams) {
                                 </li>
                             </ul>
                         </div>
-                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden invisible" ref={menuRef}>
+                        <div className="absolute top-8 right-2 flex flex-col font-bold block md:hidden" ref={menuRef}>
                             <HamburgerBtn navType="contact" />
                         </div>
                     </div>

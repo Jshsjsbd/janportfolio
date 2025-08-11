@@ -95,11 +95,11 @@ interface GameAnswer {
   boyName: string;
   girlName: string;
   plant: string;
-  object: string;
+  fruit: string;
   country: string;
   animal: string;
   color: string;
-  fruit: string;
+  food: string;
   movie: string;
   sport: string;
 }
@@ -143,11 +143,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   boyName: 'Boy Name',
   girlName: 'Girl Name',
   plant: 'Plant',
-  object: 'Object',
+  fruit: 'Fruit',
   country: 'Country',
   animal: 'Animal',
   color: 'Color',
-  fruit: 'Fruit',
+  food: 'Food',
   movie: 'Movie',
   sport: 'Sport'
 };
@@ -175,11 +175,11 @@ const StopComplete: React.FC = () => {
     boyName: '',
     girlName: '',
     plant: '',
-    object: '',
+    fruit: '',
     country: '',
     animal: '',
     color: '',
-    fruit: '',
+    food: '',
     movie: '',
     sport: ''
   });
@@ -187,16 +187,12 @@ const StopComplete: React.FC = () => {
   const [isJoiningRoomLoading, setIsJoiningRoomLoading] = useState(false);
   const [isStartingGameLoading, setIsStartingGameLoading] = useState(false);
   const [isResettingGameLoading, setIsResettingGameLoading] = useState(false);
-  const [isLeavingRoomLoading, setIsLeavingRoomLoading] = useState(false);
-  const [isFinishingGameLoading, setIsFinishingGameLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContext = useRef<AudioContext | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  // Add this useRef to track previous isGameStarted state
-  const prevIsGameStarted = useRef<boolean | undefined>(undefined);
 
   // Initialize audio context
   useEffect(() => {
@@ -397,32 +393,12 @@ const StopComplete: React.FC = () => {
     }
   }, [room, room?.isGameStarted, room?.selectedLetter]);
 
-  // Add this useEffect after room is defined:
-  useEffect(() => {
-    // If the game just started (transitioned from not started to started), clear answers for all players
-    if (room && room.isGameStarted && !prevIsGameStarted.current) {
-      setAnswers({
-        boyName: '',
-        girlName: '',
-        plant: '',
-        object: '',
-        country: '',
-        animal: '',
-        color: '',
-        fruit: '',
-        movie: '',
-        sport: ''
-      });
-    }
-    prevIsGameStarted.current = room?.isGameStarted;
-  }, [room?.isGameStarted]);
-
   const getCategoriesForMode = (mode: string) => {
     switch (mode) {
-      case 'easy': return ['boyName', 'girlName', 'plant', 'object', 'country'];
-      case 'medium': return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color'];
-      case 'hard': return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color', 'fruit', 'movie', 'sport'];
-      default: return ['boyName', 'girlName', 'plant', 'object', 'country', 'animal', 'color'];
+      case 'easy': return ['boyName', 'girlName', 'plant', 'fruit', 'country'];
+      case 'medium': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
+      case 'hard': return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color', 'food', 'movie', 'sport'];
+      default: return ['boyName', 'girlName', 'plant', 'fruit', 'country', 'animal', 'color'];
     }
   };
 
@@ -549,6 +525,7 @@ const StopComplete: React.FC = () => {
   };
 
   const apiCall = async (endpoint: string, data: any) => {
+    // i want to check if the action is create or join or start to set the loading state
     if (data.action === 'create') {
       setIsCreatingRoomLoading(true);
     } else if (data.action === 'join') {
@@ -720,7 +697,7 @@ const StopComplete: React.FC = () => {
 
   const handleFinish = async () => {
     if (!room || !playerName) return;
-    setIsFinishingGameLoading(true);
+
     try {
       const result = await apiCall('stopcomplete-rooms', {
         action: 'finish',
@@ -743,8 +720,6 @@ const StopComplete: React.FC = () => {
       }
     } catch (error) {
       setError("Failed to finish game. Please try again.");
-    } finally {
-      setIsFinishingGameLoading(false);
     }
   };
 
@@ -762,11 +737,11 @@ const StopComplete: React.FC = () => {
         boyName: '',
         girlName: '',
         plant: '',
-        object: '',
+        fruit: '',
         country: '',
         animal: '',
         color: '',
-        fruit: '',
+        food: '',
         movie: '',
         sport: ''
       });
@@ -791,7 +766,6 @@ const StopComplete: React.FC = () => {
 
   const leaveRoom = async () => {
     if (!roomId || !playerName) return;
-    setIsLeavingRoomLoading(true);
 
     try {
       await apiCall('stopcomplete-rooms', {
@@ -807,11 +781,11 @@ const StopComplete: React.FC = () => {
         boyName: '',
         girlName: '',
         plant: '',
-        object: '',
+        fruit: '',
         country: '',
         animal: '',
         color: '',
-        fruit: '',
+        food: '',
         movie: '',
         sport: ''
       });
@@ -827,8 +801,6 @@ const StopComplete: React.FC = () => {
       }
     } catch (error) {
       setError("Failed to leave room. Please try again.");
-    } finally {
-      setIsLeavingRoomLoading(false);
     }
   };
 
@@ -1028,14 +1000,14 @@ const StopComplete: React.FC = () => {
 
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold">Room: {room.id}</h1>
-            <div className="relative left-4 sm:left-0 grid grid-cols-1 gap-2 w-full sm:flex sm:flex-row sm:items-center sm:space-x-2 sm:w-auto mt-4 sm:mt-0 z-1000">
+            <div className="flex items-center space-x-2 lg:space-y-2 md:space-y-1 sm:space-y-1 lg:flex-row md:flex-col sm:flex-col">
               <button
                 onClick={copyRoomId}
                 className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
               >
                 {showCopied ? 'Copied!' : 'Copy ID'}
               </button>
-              <span className="px-2 py-1 bg-blue-500/50 rounded-full text-sm text-center">
+              <span className="px-2 py-1 bg-blue-500/50 rounded-full text-sm">
                 {room.gameMode.charAt(0).toUpperCase() + room.gameMode.slice(1)}
               </span>
               <button
