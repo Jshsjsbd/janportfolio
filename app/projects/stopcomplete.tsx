@@ -2,7 +2,7 @@
 import Header from '../components/Header';
 import Footer from "../components/Footer";
 import "../app.css";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 // Add notification animation styles
 const notificationStyles = `
@@ -208,12 +208,131 @@ const StopComplete: React.FC = () => {
     };
   }, []);
 
+  const playSound = useCallback((frequency: number, duration: number = 200) => {
+    if (!audioContext.current) return;
+    
+    const oscillator = audioContext.current.createOscillator();
+    const gainNode = audioContext.current.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.current.destination);
+    
+    oscillator.frequency.setValueAtTime(frequency, audioContext.current.currentTime);
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.1, audioContext.current.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.current.currentTime + duration / 1000);
+    
+    oscillator.start(audioContext.current.currentTime);
+    oscillator.stop(audioContext.current.currentTime + duration / 1000);
+  }, []);
+
+  const apiCall = useCallback(async (endpoint: string, data: any) => {
+    if (data.action === 'create') {
+      setIsCreatingRoomLoading(true);
+    } else if (data.action === 'join') {
+      setIsJoiningRoomLoading(true);
+    } else if (data.action === 'start') {
+      setIsStartingGameLoading(true);
+    }
+    setError(null);
+    
+    try {
+      const formData = new FormData();
+      Object.keys(data).forEach(key => {
+        if (typeof data[key] === 'object') {
+          formData.append(key, JSON.stringify(data[key]));
+        } else {
+          formData.append(key, data[key]);
+        }
+      });
+
+      const response = await fetch(`/api/${endpoint}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
+      throw error;
+    } finally {
+      if (data.action === 'create') {
+        setIsCreatingRoomLoading(false);
+      } else if (data.action === 'join') {
+        setIsJoiningRoomLoading(false);
+      } else if (data.action === 'start') {
+        setIsStartingGameLoading(false);
+      }
+    }
+  }, []);
+
+  const loadPlayerStats = useCallback(async () => {
+    if (!playerName) {
+      setGameStats({
+        totalGames: 0,
+        wins: 0,
+        averageScore: 0,
+        bestScore: 0,
+        fastestFinish: 0
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/stopcomplete-stats?playerName=${encodeURIComponent(playerName)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if ('stats' in data) {
+        setGameStats(data.stats);
+      } else {
+        setGameStats({
+          totalGames: 0,
+          wins: 0,
+          averageScore: 0,
+          bestScore: 0,
+          fastestFinish: 0
+        });
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
+      setGameStats({
+        totalGames: 0,
+        wins: 0,
+        averageScore: 0,
+        bestScore: 0,
+        fastestFinish: 0
+      });
+    }
+  }, [playerName]);
+
   // Load player stats on component mount
   useEffect(() => {
     if (playerName) {
       loadPlayerStats();
     }
-  }, [playerName]);
+  }, [playerName, loadPlayerStats]);
 
   // Timer effect
   useEffect(() => {
@@ -518,78 +637,7 @@ const StopComplete: React.FC = () => {
     }, 2000);
   };
 
-  const playSound = (frequency: number, duration: number = 200) => {
-    if (!audioContext.current) return;
-    
-    const oscillator = audioContext.current.createOscillator();
-    const gainNode = audioContext.current.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.current.destination);
-    
-    oscillator.frequency.setValueAtTime(frequency, audioContext.current.currentTime);
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.1, audioContext.current.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.current.currentTime + duration / 1000);
-    
-    oscillator.start(audioContext.current.currentTime);
-    oscillator.stop(audioContext.current.currentTime + duration / 1000);
-  };
 
-  const loadPlayerStats = async () => {
-    try {
-      const data = await apiCall('stopcomplete-stats', { playerName });
-      if ('stats' in data) {
-        setGameStats(data.stats);
-      }
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    }
-  };
-
-  const apiCall = async (endpoint: string, data: any) => {
-    if (data.action === 'create') {
-      setIsCreatingRoomLoading(true);
-    } else if (data.action === 'join') {
-      setIsJoiningRoomLoading(true);
-    } else if (data.action === 'start') {
-      setIsStartingGameLoading(true);
-    }
-    // setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Use Vercel API endpoints that handle Firebase authentication
-      const response = await fetch(`/api/${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-      
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-      setError(errorMessage);
-      throw error;
-    } finally {
-      if (data.action === 'create') {
-        setIsCreatingRoomLoading(false);
-      } else if (data.action === 'join') {
-        setIsJoiningRoomLoading(false);
-      } else if (data.action === 'start') {
-        setIsStartingGameLoading(false);
-      }
-    }
-  };
 
   const createRoom = async () => {
     if (!playerName.trim() && !createPassword.trim()) {
@@ -718,7 +766,7 @@ const StopComplete: React.FC = () => {
     });
   };
 
-  const handleFinish = async () => {
+  const handleFinish = useCallback(async () => {
     if (!room || !playerName) return;
     setIsFinishingGameLoading(true);
     try {
@@ -746,7 +794,7 @@ const StopComplete: React.FC = () => {
     } finally {
       setIsFinishingGameLoading(false);
     }
-  };
+  }, [room, playerName, roomId, answers, apiCall, playSound]);
 
   const resetGame = async () => {
     if (!isHost) return;
