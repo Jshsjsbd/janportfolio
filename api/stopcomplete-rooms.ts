@@ -30,6 +30,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return await startGame(data, res);
         case 'finish':
           return await finishGame(data, res);
+        case 'timeUp':
+          return await handleTimeUp(data, res);
         case 'kick':
           return await kickPlayer(data, res);
         case 'reset':
@@ -232,6 +234,68 @@ async function finishGame(data: any, res: VercelResponse) {
   }
 
   return res.status(200).json({ success: true, finishedPlayers });
+}
+
+async function handleTimeUp(data: any, res: VercelResponse) {
+  const { roomId, playerName } = data;
+
+  const roomRef = ref(db, `secure_beacons/${secret}/rooms/${roomId}`);
+  const roomSnapshot = await get(roomRef);
+
+  if (!roomSnapshot.exists()) {
+    return res.status(404).json({ error: 'Room not found' });
+  }
+
+  const room = roomSnapshot.val();
+
+  if (!room.isGameStarted || room.isGameFinished) {
+    return res.status(409).json({ error: 'Game not in progress' });
+  }
+
+  // Auto-finish the game for all players who haven't finished yet
+  const allPlayers = room.players;
+  const unfinishedPlayers = allPlayers.filter((player: string) => 
+    !room.finishedPlayers.some((p: any) => p.player === player)
+  );
+
+  // For unfinished players, create empty answers and calculate scores
+  const newFinishedPlayers = unfinishedPlayers.map((player: string) => {
+    const emptyAnswers = room.categories.reduce((acc: any, cat: string) => {
+      acc[cat] = '';
+      return acc;
+    }, {});
+
+    const { score, uniqueAnswers } = calculateScore(emptyAnswers, room.finishedPlayers, player);
+
+    return {
+      player,
+      answers: emptyAnswers,
+      finishTime: Date.now(),
+      score,
+      uniqueAnswers
+    };
+  });
+
+  // Combine existing finished players with new ones
+  const allFinishedPlayers = [...room.finishedPlayers, ...newFinishedPlayers];
+
+  // Update player stats for all newly finished players
+  for (const player of newFinishedPlayers) {
+    await updatePlayerStats(player.player, player.score);
+  }
+
+  // Mark game as finished
+  await update(roomRef, {
+    finishedPlayers: allFinishedPlayers,
+    isGameFinished: true,
+    lastActivity: Date.now()
+  });
+
+  return res.status(200).json({ 
+    success: true, 
+    finishedPlayers: allFinishedPlayers,
+    timeUp: true
+  });
 }
 
 async function kickPlayer(data: any, res: VercelResponse) {

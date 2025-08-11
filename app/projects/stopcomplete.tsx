@@ -533,6 +533,8 @@ const StopComplete: React.FC = () => {
       // Set flag that game ended by time
       setGameEndedByTime(true);
       
+
+      
       // Auto-finish the game for all players
       await apiCall('stopcomplete-rooms', {
         action: 'timeUp',
