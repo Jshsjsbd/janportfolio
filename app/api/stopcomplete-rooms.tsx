@@ -36,6 +36,8 @@ export async function action({ request }: ActionFunctionArgs) {
       return await startGame(data);
     case 'finish':
       return await finishGame(data);
+    case 'timeUp':
+      return await handleTimeUp(data);
     case 'kick':
       return await kickPlayer(data);
     case 'reset':
@@ -227,6 +229,68 @@ async function finishGame(data: any) {
     score,
     uniqueAnswers,
     finishTime: Date.now()
+  });
+}
+
+async function handleTimeUp(data: any) {
+  const { roomId, playerName } = data;
+
+  const roomRef = ref(db, `stopcomplete/rooms/${roomId}`);
+  const roomSnapshot = await get(roomRef);
+
+  if (!roomSnapshot.exists()) {
+    return json({ error: 'Room not found' }, { status: 404 });
+  }
+
+  const room = roomSnapshot.val();
+
+  if (!room.isGameStarted || room.isGameFinished) {
+    return json({ error: 'Game not in progress' }, { status: 409 });
+  }
+
+  // Auto-finish the game for all players who haven't finished yet
+  const allPlayers = room.players;
+  const unfinishedPlayers = allPlayers.filter((player: string) => 
+    !room.finishedPlayers.some((p: any) => p.player === player)
+  );
+
+  // For unfinished players, create empty answers and calculate scores
+  const newFinishedPlayers = unfinishedPlayers.map((player: string) => {
+    const emptyAnswers = room.categories.reduce((acc: any, cat: string) => {
+      acc[cat] = '';
+      return acc;
+    }, {});
+
+    const { score, uniqueAnswers } = calculateScore(emptyAnswers, room.finishedPlayers, player);
+
+    return {
+      player,
+      answers: emptyAnswers,
+      finishTime: Date.now(),
+      score,
+      uniqueAnswers
+    };
+  });
+
+  // Combine existing finished players with new ones
+  const allFinishedPlayers = [...room.finishedPlayers, ...newFinishedPlayers];
+
+  // Update player stats for all newly finished players
+  for (const player of newFinishedPlayers) {
+    await updatePlayerStats(player.player, player.score);
+  }
+
+  // Mark game as finished
+  await update(roomRef, {
+    finishedPlayers: allFinishedPlayers,
+    isGameFinished: true,
+    lastActivity: Date.now()
+  });
+
+  return json({ 
+    success: true, 
+    finishedPlayers: allFinishedPlayers,
+    timeUp: true
   });
 }
 

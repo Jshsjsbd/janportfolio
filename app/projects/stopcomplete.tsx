@@ -188,6 +188,7 @@ const StopComplete: React.FC = () => {
   const [isStartingGameLoading, setIsStartingGameLoading] = useState(false);
   const [isResettingGameLoading, setIsResettingGameLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [gameEndedByTime, setGameEndedByTime] = useState(false);
   const [notifications, setNotifications] = useState<string[]>([]);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -239,10 +240,19 @@ const StopComplete: React.FC = () => {
 
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
-          if (prev <= 1) {
-            return 0;
+          const newTime = prev <= 1 ? 0 : prev - 1;
+          
+          // Play countdown sound when time is running low
+          if (prev <= 10 && prev > 0) {
+            playSound(800 - (10 - prev) * 50, 100); // Decreasing pitch countdown
           }
-          return prev - 1;
+          
+          // Auto-finish game when timer reaches zero
+          if (prev <= 1 && !room.isGameFinished) {
+            handleTimeUp();
+          }
+          
+          return newTime;
         });
       }, 1000);
     }
@@ -494,23 +504,44 @@ const StopComplete: React.FC = () => {
     }, 2000);
   };
 
-  const playSound = (frequency: number, duration: number = 200) => {
+    const playSound = (frequency: number, duration: number = 200) => {
     if (!audioContext.current) return;
-    
+
     const oscillator = audioContext.current.createOscillator();
     const gainNode = audioContext.current.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.current.destination);
-    
+
     oscillator.frequency.setValueAtTime(frequency, audioContext.current.currentTime);
     oscillator.type = 'sine';
-    
+
     gainNode.gain.setValueAtTime(0.1, audioContext.current.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.current.currentTime + duration / 1000);
-    
+
     oscillator.start(audioContext.current.currentTime);
     oscillator.stop(audioContext.current.currentTime + duration / 1000);
+  };
+
+  const handleTimeUp = async () => {
+    if (!room || !playerName) return;
+
+    try {
+      // Play time up sound
+      playSound(200, 500); // Low frequency sound for time up
+      
+      // Set flag that game ended by time
+      setGameEndedByTime(true);
+      
+      // Auto-finish the game for all players
+      await apiCall('stopcomplete-rooms', {
+        action: 'timeUp',
+        roomId,
+        playerName
+      });
+    } catch (error) {
+      console.error('Error handling time up:', error);
+    }
   };
 
   const loadPlayerStats = async () => {
@@ -746,6 +777,7 @@ const StopComplete: React.FC = () => {
         sport: ''
       });
       setTimeLeft(timeLimit);
+      setGameEndedByTime(false);
       // setIsSelecting(false); // Removed
       setSelectedLetter('');
       // setLetterAnimationHandled(false); // Removed
@@ -790,6 +822,7 @@ const StopComplete: React.FC = () => {
         sport: ''
       });
       setSelectedLetter('');
+      setGameEndedByTime(false);
       // setLetterAnimationHandled(false); // Removed
       // animationHandledRef.current = false; // Removed
       // setShouldAnimateLetter(false); // Removed
@@ -1022,7 +1055,31 @@ const StopComplete: React.FC = () => {
           {/* Timer */}
           {room.isGameStarted && room.timeLimit > 0 && !room.isGameFinished && (
             <div className="mb-4 text-center">
-              <div className={`text-2xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-blue-400'}`}>{formatTime(timeLeft)}</div>
+              <div className={`text-2xl font-bold ${
+                timeLeft <= 10 ? 'text-red-500 animate-pulse' : 
+                timeLeft <= 30 ? 'text-red-400 animate-pulse' : 
+                timeLeft <= 60 ? 'text-yellow-400' : 
+                'text-blue-400'
+              }`}>
+                {formatTime(timeLeft)}
+              </div>
+              {timeLeft <= 10 && (
+                <div className="text-sm text-red-400 mt-1 animate-pulse">
+                  {timeLeft <= 5 ? `HURRY! ${timeLeft} seconds left!` : "Time's almost up!"}
+                </div>
+              )}
+              {/* Progress bar for time remaining */}
+              <div className="mt-2 w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-1000 ${
+                    timeLeft <= 10 ? 'bg-red-500' : 
+                    timeLeft <= 30 ? 'bg-red-400' : 
+                    timeLeft <= 60 ? 'bg-yellow-400' : 
+                    'bg-blue-400'
+                  }`}
+                  style={{ width: `${(timeLeft / room.timeLimit) * 100}%` }}
+                ></div>
+              </div>
             </div>
           )}
           {room.isGameStarted && room.timeLimit === 0 && !room.isGameFinished && (
@@ -1088,6 +1145,12 @@ const StopComplete: React.FC = () => {
 
         {room.isGameStarted && (
           <div className="space-y-4">
+            {timeLeft <= 30 && timeLeft > 0 && !room.isGameFinished && (
+              <div className="text-center p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg mb-4">
+                <div className="text-yellow-400 font-semibold">⚠️ Time Warning</div>
+                <div className="text-sm text-yellow-300">Only {timeLeft} seconds remaining!</div>
+              </div>
+            )}
             <h2 className="text-2xl font-bold text-center mb-6">
               Letter: <span className="text-blue-400">{room.selectedLetter}</span>
             </h2>
@@ -1100,7 +1163,11 @@ const StopComplete: React.FC = () => {
                     placeholder={CATEGORY_LABELS[category]}
                     value={answers[category as keyof GameAnswer]}
                     onChange={(e) => handleAnswerChange(category as keyof GameAnswer, e.target.value)}
-              className="w-full p-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full p-3 bg-gray-800/50 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${
+                timeLeft <= 10 && !room?.isGameFinished && !isPlayerFinished 
+                  ? 'border-red-500 animate-pulse' 
+                  : 'border-gray-600'
+              }`}
                     disabled={room?.isGameFinished || isPlayerFinished || false}
                   />
                 ))}
@@ -1109,9 +1176,13 @@ const StopComplete: React.FC = () => {
               <button
                 onClick={handleFinish}
                 disabled={room?.isGameFinished || isPlayerFinished || false}
-                className="w-full mt-6 bg-green-500/80 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full mt-6 text-white p-3 rounded-lg font-semibold transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed ${
+                  timeLeft <= 10 
+                    ? 'bg-red-500/80 hover:bg-red-600 animate-pulse' 
+                    : 'bg-green-500/80 hover:bg-green-600'
+                }`}
               >
-                Finish
+                {timeLeft <= 10 ? 'FINISH NOW!' : 'Finish'}
               </button>
             )}
           </div>
@@ -1120,6 +1191,12 @@ const StopComplete: React.FC = () => {
           {room?.isGameFinished && (
           <div className="mt-8 space-y-6">
             <h2 className="text-2xl font-bold text-center mb-6">Results</h2>
+            {gameEndedByTime && (
+              <div className="text-center mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                <div className="text-red-400 font-semibold">⏰ Time's Up!</div>
+                <div className="text-sm text-red-300">Game ended automatically when timer reached zero</div>
+              </div>
+            )}
             <div className="space-y-4">
       {room.players.map((playerName, index) => {
         const answers: any = room.liveAnswers && room.liveAnswers[playerName] ? room.liveAnswers[playerName] : {};
