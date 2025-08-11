@@ -864,35 +864,6 @@ const StopComplete: React.FC = () => {
         : (room.finishedPlayers.length > 0 ? room.finishedPlayers[0].player : null))
     : null;
 
-  useEffect(() => {
-    if (
-      room?.isGameStarted &&
-      !room?.isGameFinished &&
-      room?.timeLimit > 0 &&
-      timeLeft === 0 &&
-      !isPlayerFinished &&
-      room &&
-      playerName
-    ) {
-      console.log('Timer expired - automatically finishing game for player:', playerName);
-      handleFinish();
-    }
-  }, [timeLeft, room?.isGameStarted, room?.isGameFinished, room?.timeLimit, isPlayerFinished, room, playerName, handleFinish]);
-
-  useEffect(() => {
-    if (
-      room?.isGameStarted &&
-      !room?.isGameFinished &&
-      room?.timeLimit > 0 &&
-      timeLeft === 0 &&
-      !isPlayerFinished &&
-      room &&
-      playerName
-    ) {
-      console.log('Timer expired - automatically finishing game for player:', playerName);
-      handleFinish();
-    }
-  }, [timeLeft, room?.isGameStarted, room?.isGameFinished, room?.timeLimit, isPlayerFinished, room, playerName, handleFinish]);
 
   if (!room) {
     return (
