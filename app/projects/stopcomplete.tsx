@@ -839,6 +839,21 @@ const StopComplete: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  useEffect(() => {
+    if (
+      room?.isGameStarted &&
+      !room?.isGameFinished &&
+      room?.timeLimit > 0 &&
+      timeLeft === 0 &&
+      !isPlayerFinished &&
+      room &&
+      playerName
+    ) {
+      console.log('Timer expired - automatically finishing game for player:', playerName);
+      handleFinish();
+    }
+  }, [timeLeft, room?.isGameStarted, room?.isGameFinished, room?.timeLimit, isPlayerFinished, room, playerName, handleFinish]);
+
   // 1. Add a helper to check if the game is finished for everyone (all players in finishedPlayers):
   const isGameFinished = room && room.isGameFinished;
 
@@ -848,6 +863,7 @@ const StopComplete: React.FC = () => {
         ? null
         : (room.finishedPlayers.length > 0 ? room.finishedPlayers[0].player : null))
     : null;
+
 
   if (!room) {
     return (
@@ -1050,7 +1066,12 @@ const StopComplete: React.FC = () => {
           {/* Timer */}
           {room.isGameStarted && room.timeLimit > 0 && !room.isGameFinished && (
             <div className="mb-4 text-center">
-              <div className={`text-2xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-blue-400'}`}>{formatTime(timeLeft)}</div>
+              <div className={`text-2xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-blue-400'}`}>
+                {timeLeft === 0 ? 'TIME UP!' : formatTime(timeLeft)}
+              </div>
+              {timeLeft === 0 && (
+                <div className="text-sm text-red-300 mt-1">Game ending automatically...</div>
+              )}
             </div>
           )}
           {room.isGameStarted && room.timeLimit === 0 && !room.isGameFinished && (
