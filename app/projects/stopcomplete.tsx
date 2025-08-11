@@ -238,13 +238,23 @@ const StopComplete: React.FC = () => {
     setError(null);
     
     try {
+      const formData = new FormData();
+      Object.keys(data).forEach(key => {
+        if (typeof data[key] === 'object') {
+          formData.append(key, JSON.stringify(data[key]));
+        } else {
+          formData.append(key, data[key]);
+        }
+      });
+
       const response = await fetch(`/api/${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        body: formData,
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
       
@@ -269,10 +279,41 @@ const StopComplete: React.FC = () => {
   }, []);
 
   const loadPlayerStats = useCallback(async () => {
+    if (!playerName) {
+      setGameStats({
+        totalGames: 0,
+        wins: 0,
+        averageScore: 0,
+        bestScore: 0,
+        fastestFinish: 0
+      });
+      return;
+    }
+
     try {
-      const data = await apiCall('stopcomplete-stats', { playerName });
+      const response = await fetch(`/api/stopcomplete-stats?playerName=${encodeURIComponent(playerName)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
       if ('stats' in data) {
         setGameStats(data.stats);
+      } else {
+        setGameStats({
+          totalGames: 0,
+          wins: 0,
+          averageScore: 0,
+          bestScore: 0,
+          fastestFinish: 0
+        });
       }
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -284,7 +325,7 @@ const StopComplete: React.FC = () => {
         fastestFinish: 0
       });
     }
-  }, [playerName, apiCall]);
+  }, [playerName]);
 
   // Load player stats on component mount
   useEffect(() => {
